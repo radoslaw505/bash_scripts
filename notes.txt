@@ -1,0 +1,7 @@
+
+$@ -> all passed arguments
+$? ->
+$0 -> script name
+$1 $2 ... -> 1st passed argument, 2nd passed argument ... after script name
+
+|& tee -a file.log -> redirect only error
