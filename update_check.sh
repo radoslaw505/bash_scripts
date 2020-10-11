@@ -37,7 +37,7 @@ function check_install() {
 function main() {
     log_success "Control file ${UWHITE}${control_file}${NC} created."
     update_packages
-    check_install mc zip unzip
+    check_install ifconfig
 }
 
 

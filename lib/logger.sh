@@ -50,6 +50,13 @@ function log_debug() {
     echo -e "[${current_time}][ ${CYAN}DEBUG${NC} ]: ${msg}" | tee -a "$control_file"
 }
 
+function log_input() {
+    msg=$1
+    current_time=$(date +"%F %T.%3N")
+    echo -en "[${current_time}][ ${BLUE}INPUT${NC} ]: ${msg} [y/N]: " | tee -a "$control_file"
+    read input
+}
+
 
 function usage() {
     echo "usage_to_do"
