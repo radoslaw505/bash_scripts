@@ -1,21 +1,27 @@
 #!/usr/bin/bash
 
-. ./lib/logger.sh
+
+LIB_PATH="/mnt/c/Users/rados/Projects/Bash/bash_scripts/LIB/"
+
+. ${LIB_PATH}/logger.sh
+
+
+function usage_generate() {
+    echo -e "${BLUE}Usage: $0 [-h --help] [package_name]"
+    echo -e "\t\t${BLUE}-h --help     -- Show this message"
+    echo -e "\t\t${BLUE}-package_name -- Replace this with package name you want to install"
+}
 
 
 function update_packages() {
-    sudo apt-get update |& tee -a "$control_file" &> /dev/null
-    sudo apt-get upgrade -y |& tee -a "$control_file" &> /dev/null
-    log_success "Update has been completed."
+    log_debug "Updating packages..."
+    sudo apt-get update |& tee -a "$control_file" &> /dev/null && log_success "Update has been completed."
+    log_debug "Upgrading packages..."
+    sudo apt-get upgrade -y |& tee -a "$control_file" &> /dev/null && log_success "Upgrade has been completed."
 }
 
 
 function check_install() {
-    if [ $# -eq 0 ]; then
-        log_warning "No argument were given!"
-        exit 1
-    fi
-
     for package in "$@"; do
         dpkg -s "$package" &> /dev/null
         if [ $? -eq 0 ]; then
@@ -35,10 +41,17 @@ function check_install() {
 
 
 function main() {
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        usage_generate
+        exit 1
+    fi
+
     log_success "Control file ${UWHITE}${control_file}${NC} created."
     update_packages
-    check_install ifconfig
+
+    if [ $# -gt 0 ]; then
+        check_install $@
+    fi
 }
 
-
-main
+main $@
