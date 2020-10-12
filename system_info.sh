@@ -4,46 +4,81 @@
 . ./lib/logger.sh
 
 
-function mysystem_info() {
-    if [ $# -eq 0 ]; then
-        log_warning "No argument were given."
-        exit 1
-    fi
+function usage_generate() {
+    echo -e "${BLUE}Usage: $0 [-h --help][-s --system-info][-u --user-list][-g --group-list][-n --net-interfaces]"
+    echo -e "\t${BLUE}-h --help           -- Show this message"
+    echo -e "\t${BLUE}-s --system-info    -- Check system informations"
+    echo -e "\t${BLUE}-u --user-info      -- Check current users"
+    echo -e "\t${BLUE}-g --group-info     -- Check current groups"
+    echo -e "\t${BLUE}-n --network-info   -- Check current net interfaces"
+}
 
-    for myargs in "$@"; do
-        # Kernel version
-        if [ $myargs = 'kernel' ]; then
+
+function options () {
+    case $1 in
+        "-h"|"--help" )
+            usage_generate
+            exit 1
+            ;;
+        "-s"|"--system-info" )
+            system_info="true"
+            ;;
+        "-u"|"--user-info" )
+            user_info="true"
+            ;;
+        "-g"|"--group-info" )
+            group_info="true"
+            ;;
+        "-n"|"--network-info" )
+            network_info="true"
+            ;;
+        * )
+            echo "No or incorrect option were chosen."
+            usage_generate
+            ;;
+    esac
+}
+
+
+function system_info() {
+    echo -e "${BLUE}Available arguments:"
+    echo -e "\t${BLUE}kernel    - Return kernel version${NC}"
+    echo -e "\t${BLUE}os        - Return os type${NC}"
+    echo -e "\t${BLUE}distro    - Return distro version${NC}"
+    echo -e "\t${BLUE}platform  - Return platform version${NC}"
+
+    log_input "Enter argument: "
+    case "$input" in
+        kernel)
             log_success "Your Kernel version is: $(uname -r)"
-        fi
-        # Os type
-        if [ $myargs = 'os' ]; then
+            ;;
+        os)
             log_success "Your Os type is: $(uname -s)"
-        fi
-        # Distro version
-        if [ $myargs = 'distro' ]; then
+            ;;
+        distro)
             log_success "Your Distro version is: $(cat /proc/sys/kernel/version)"
-        fi
-        # Platform
-        if [ $myargs = 'platform' ]; then
+            ;;
+        platform)
             log_success "Your Platform version is: $(uname -m)"
-        fi
-    done
+            ;;
+        *)
+            log_warning "Incorrect parameter: $1."
+            echo -e "${BLUE}Available arguments: kernel, os, distro, platform."
+            exit 1
+            ;;
+    esac
 }
 
 
 function user_list() {
-    if [ $# -lt 1 ]; then
-        log_warning "No argument were given."
-        echo -e "${BLUE}$0 <arg>"
-        echo -e "${BLUE}Available arguments:"
-        echo -e "\t${BLUE}- home    -- Returns users with patch /home"
-        echo -e "\t${BLUE}- uid     -- Return users with UID > 1000"
-        echo -e "\t${BLUE}- homeuid -- Returns users with patch /home and UID > 1000"
-        echo -e "\t${BLUE}- bash    -- Returns users with /bin/bash shell"
-        exit 1
-    fi
+    echo -e "${BLUE}Available arguments:"
+    echo -e "\t${BLUE}home    - Returns users with patch /home${NC}"
+    echo -e "\t${BLUE}uid     - Return users with UID > 1000${NC}"
+    echo -e "\t${BLUE}homeuid - Returns users with patch /home and UID > 1000${NC}"
+    echo -e "\t${BLUE}bash    - Returns users with /bin/bash shell${NC}\n"
 
-    case "$1" in
+    log_input "Enter argument: "
+    case "$input" in
         home)
             log_success "Users list:"
             awk -F: '/\/home/ {printf "%s:%s\n",$1,$3}' /etc/passwd | tee -a "$control_file"
@@ -62,7 +97,7 @@ function user_list() {
             ;;
         *)
             log_warning "Given argument $1 is invalid."
-            log_input "Do you want to list all users?"
+            log_input "Do you want to list all users?[y/N]: "
             case "$input" in
                 [yY])
                     log_success "Users list:"
@@ -73,6 +108,7 @@ function user_list() {
                     ;;
                 *)
                     log_warning "Incorrect input: ${input}."
+                    echo -e "${BLUE}Available arguments: home, uid, homeuid, bash."
                     exit 1
                     ;;
             esac
@@ -82,7 +118,12 @@ function user_list() {
 
 
 function group_list() {
-    case "$1" in
+    echo -e "${BLUE}Available arguments:"
+    echo -e "\t${BLUE}cut    - Return groups using 'cut' command${NC}"
+    echo -e "\t${BLUE}awk    - Return groups using 'awk' command${NC}"
+
+    log_input "Enter argument: "
+    case "$input" in
         cut)
             log_success "Group list:"
             cut -d: -f1 /etc/group | tee -a "$control_file"
@@ -93,8 +134,7 @@ function group_list() {
             ;;
         *)
             log_warning "Incorrect parameter: $1."
-            echo -e "${BLUE}$0 <arg>"
-            echo -e "${BLUE}Available arguments: cut, awk"
+            echo -e "${BLUE}Available arguments: cut, awk."
             exit 1
             ;;
     esac
@@ -102,7 +142,16 @@ function group_list() {
 
 
 function net_interfaces() {
-    case "$1" in
+    echo -e "${BLUE}Available arguments:"
+    echo -e "\t${BLUE}inet      - Return network interfaces${NC}"
+    echo -e "\t${BLUE}stat      - Return names ofnetwork interfaces with status UP/DOWN${NC}"
+    echo -e "\t${BLUE}iname     - Return names of network interfaces:${NC}"
+    echo -e "\t${BLUE}kerneli   - Return list of network interfaces seen in kernel table${NC}"
+    echo -e "\t${BLUE}iaddress  - Return list of interfaces witch IPv4 and IPv6${NC}"
+    echo -e "\t${BLUE}ifls      - Return list of network devices and their names (interfaces)${NC}"
+
+    log_input "Enter argument: "
+    case "$input" in
         inet)
             log_success "Network interfaces:"
             ip link show | tee -a "$control_file"
@@ -132,7 +181,6 @@ function net_interfaces() {
             ;;
         *)
             log_warning "Incorrect parameter: $1."
-            echo -e "${BLUE}$0 <arg>"
             echo -e "${BLUE}Available arguments: inet, stat, iname, kerneli, iaddress, ifls"
             exit 1
             ;;
@@ -142,10 +190,20 @@ function net_interfaces() {
 
 
 function main() {
-    # mysystem_info $1
-    # user_list $1
-    # group_list $1
-    net_interfaces $1
+    options $1
+
+    if [ "$system_info" = "true" ]; then
+        system_info && exit 1
+    fi
+    if [ "$user_info" = "true" ]; then
+        user_list && exit 1
+    fi
+    if [ "$group_info" = "true" ]; then
+        group_list && exit 1
+    fi
+    if [ "$network_info" = "true" ]; then
+        net_interfaces && exit 1
+    fi
 }
 
 
