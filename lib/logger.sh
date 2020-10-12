@@ -56,8 +56,3 @@ function log_input() {
     echo -en "[${current_time}][ ${BLUE}INPUT${NC} ]: ${msg}" | tee -a "$control_file"
     read input
 }
-
-
-function usage() {
-    echo "usage_to_do"
-}
