@@ -1,7 +1,8 @@
 #!/usr/bin/bash
 
+LIB_PATH="/mnt/c/Users/rados/Projects/Bash/bash_scripts/LIB/"
 
-. ./lib/logger.sh
+. ${LIB_PATH}/logger.sh
 
 
 function usage_generate() {
@@ -96,7 +97,7 @@ function user_list() {
             ;;
         bash)
             log_success "Users list:"
-            cat "/etc/passwd" | grep "/bin/bash" | cut -d: -f1 | tee -a "$control_file"
+            grep "/bin/bash" "/etc/passwd" | cut -d: -f1 | tee -a "$control_file"
             ;;
         *)
             log_warning "Given argument $1 is invalid."
@@ -210,7 +211,7 @@ function disk_info() {
             ;;
         "total")
             log_success "Space available on all currently mounted file systems, and total space:"
-            df -h --${input} | tee -a "$control_file"
+            df -h --"${input}" | tee -a "$control_file"
             ;;
         *)
             log_warning "Incorrect parameter: $1."
@@ -222,7 +223,7 @@ function disk_info() {
 
 
 function main() {
-    options $1
+    options "$1"
 
     if [ "$system_info" = "true" ]; then
         system_info && exit 0
@@ -242,4 +243,4 @@ function main() {
 }
 
 
-main $1
+main "$1"
