@@ -32,6 +32,9 @@ function options () {
         "-n"|"--network-info" )
             network_info="true"
             ;;
+        "-d"|"--disk-info" )
+            disk_info="true"
+            ;;
         * )
             echo "No or incorrect option were chosen."
             usage_generate
@@ -189,20 +192,52 @@ function net_interfaces() {
 }
 
 
+function disk_info() {
+    echo -e "${BLUE}Available arguments:"
+    echo -e "\t${BLUE}space     - Return space available on all currently mounted file systems${NC}"
+    echo -e "\t${BLUE}all       - Return space available on all currently mounted file systems include pseudo, duplicate, inaccessible file systems${NC}"
+    echo -e "\t${BLUE}total     - Return all entries insignificant to available space, and produce a grand total${NC}"
+
+    log_input "Enter argument: "
+    case "$input" in
+        "space")
+            log_success "Space available on all currently mounted file systems:"
+            df -h | tee -a "$control_file"
+            ;;
+        "all")
+            log_success "Space available on all currently mounted file systems include pseudo, duplicate, inaccessible file systems:"
+            df -ha | tee -a "$control_file"
+            ;;
+        "total")
+            log_success "Space available on all currently mounted file systems, and total space:"
+            df -h --${input} | tee -a "$control_file"
+            ;;
+        *)
+            log_warning "Incorrect parameter: $1."
+            echo -e "${BLUE}Available arguments: space, all, total."
+            exit 1
+            ;;
+    esac
+}
+
+
 function main() {
     options $1
 
     if [ "$system_info" = "true" ]; then
-        system_info && exit 1
+        system_info && exit 0
     fi
     if [ "$user_info" = "true" ]; then
-        user_list && exit 1
+        user_list && exit 0
     fi
     if [ "$group_info" = "true" ]; then
-        group_list && exit 1
+        group_list && exit 0
     fi
     if [ "$network_info" = "true" ]; then
-        net_interfaces && exit 1
+        net_interfaces && exit 0
+    fi
+    if [ "$disk_info" = "true" ]; then
+        disk_info && exit 0
     fi
 }
 
