@@ -1,8 +1,64 @@
 
 $@ -> all passed arguments
 $# -> number of passed arguments
-$? -> exit code from previous command
+$? -> exit code from previous command, 0 is succcess, eg. if [ "$?" -eq "0" ]; then echo "success"; else echo "failure"; fi;
 $0 -> script name
 $1 $2 ... -> 1st passed argument, 2nd passed argument ... after script name
 
+i=1; $((i++)) -> incrementation, i + 1
+
 |& tee -a file.log -> redirect only error
+
+# COMMANDS:
+
+awk 
+    '{print $1,$3}' --> prints 1st and 3rd value,           eg. awk {print $1,$3}
+    -F              --> delimiter, default is 'space',      eg. awk -F: {print $1,$3} --> print 1st and 3rd value separated by ':'
+
+
+# LOOPS
+
+1. For loop:
+
+    words="A B C D E"
+    for word in $words; do
+        # code to execute, eg. echo "${word}" 
+    done
+
+    Loop will work on every value in variable $words.
+    If variable $words will be in "" it will be treated as one object. (for word in "$words"; do # code to execute; done) <-- loop will work only 1 time
+
+    Other examples: 
+        - for i in 1 2 3 4 5; do echo $1; done
+        - for i in {1..5}; do echo $1; done
+        - for i in {1..10..2}; do echo $1; done --> will print value from 1 to 9 every 2 --> 1, 3, 5, 7, 9
+        - for i in $(seq 1 2 10); do echo $1; done --> same as above, older bash versions
+        - for (( i=1; i<=20; i++ )); do echo $1; done
+
+
+2. While loop:
+
+    count=1
+    while [ $count -le 20]; do
+        echo $count
+        ((count++))
+    done
+
+    Loop will print values up to 20, and the breaks. If condition is FALSE loop breaks.
+    Unlimited loop: while True; do #code; done;
+
+    Other examples:
+        - while :; do echo #code'; done --> unlimited loop
+
+
+3. Until loop:
+
+    count=1
+    until [ $count -gt 20]; do
+        echo $count
+        ((count++))
+    done
+
+    Loop will print values up to 20, and the breaks. If condition is TRUE loop breaks.
+    Unlimited loop: while False; do #code; done;
+4.
