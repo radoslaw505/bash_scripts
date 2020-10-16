@@ -18,6 +18,9 @@ awk
 
 # LOOPS
 
+continue -> ignoresloop iteration and start another
+break    -> breaks (leaves) loop
+
 1. For loop:
 
     words="A B C D E"
@@ -45,7 +48,7 @@ awk
     done
 
     Loop will print values up to 20, and the breaks. If condition is FALSE loop breaks.
-    Unlimited loop: while True; do #code; done;
+    Unlimited loop: while true; do #code; done;
 
     Other examples:
         - while :; do echo #code'; done --> unlimited loop
@@ -60,5 +63,20 @@ awk
     done
 
     Loop will print values up to 20, and the breaks. If condition is TRUE loop breaks.
-    Unlimited loop: while False; do #code; done;
-4.
+    Unlimited loop: while false; do #code; done;
+
+
+4. Select loop
+
+    options="Version Users Groups Exit"
+    PS3="Choose option: "
+    select option in $options; do
+        if [ $option == 'Exit' ]; then
+            echo 'Bye!'
+            break
+        fi
+        echo "You choose option: ${option}."
+    done
+
+    Loop work like menu. Will print all values in variable $options, and then waits for user input.
+    If you choose 4) Exit loop will break, otherwise in will print what you chosen.

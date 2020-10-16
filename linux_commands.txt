@@ -1,0 +1,24 @@
+# TERMINAL
+
+stdin(0)  -> standard in -> user input
+stdout(1) -> standard out -> command output, default to terminal
+stderr(2) -> standard error -> error
+
+set --help
+set +[flag] -> disable changes 
+
+set -C -> Preventing overwriting files. That means that redirecting to a file does not erase the current data in that file. Not recommended.
+set -f -> Disable automatic file name generation, more commonly known as "globbing."
+set -e -> Stops a script immediately when something goes wrong.
+set -x -> Enables to see which command in script is being executed followed by the result. More accurately debug.
+
+-- SPECIAL VARIABLES
+
+$0 -> check shell eg. echo $0
+$SHELL -> return shell with path eg. echo "$SHELL"
+
+
+-- COMMANDS
+
+tr -> Translate, squeeze, and/or delete characters from standard input, writing to standard output.
+    eg. tr a-z A-Z -> change lowercase to uppercase
