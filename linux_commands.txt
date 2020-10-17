@@ -1,8 +1,25 @@
 # TERMINAL
 
-stdin(0)  -> standard in -> user input
-stdout(1) -> standard out -> command output, default to terminal
-stderr(2) -> standard error -> error
+0 - stdin  -> standard in -> user input
+1 - stdout -> standard out -> command output, default to terminal
+2 - stderr -> standard error -> error, standard error is redirected by default to terminal
+
+Streams can be redirected using 'n>' operator, where 'n' is file descriptor number.
+When n is ommited, it defaults to 1.
+
+    $ command >  file --> redirect the command output (stdout) to the file
+    $ command 1> file --> redirect the command output (stdout) to the file
+    $ command 2> file --> redirect the standard error (stderr) to the file
+
+    $ command 2> error.txt 1> output.txt --> redirect the standard error (stderr) to the error.txt and command output (stdout) to the output.txt
+    $ command 2> /dev/null --> suppress the error (or stdout) messages from being displayed on the screen, redirect stderr to /dev/null (virtual trash)
+
+    $ command > file 2>&1 --> redirect stderr to stdout and have error messages sent to the same file as standard output
+                            # The order of redirection is important. For example, the following example redirects only stdout to file. 
+                            # $ command 2>&1 > file 
+                            # This happens because the stderr is redirected to stdout before the stdout was redirected to file.
+    $ command &> file     --> another way to redirect stderr to stdout is to use the &> construct. In Bash &> has the same meaning as 2>&1
+
 
 set --help
 set +[flag] -> disable changes 
@@ -12,13 +29,38 @@ set -f -> Disable automatic file name generation, more commonly known as "globbi
 set -e -> Stops a script immediately when something goes wrong.
 set -x -> Enables to see which command in script is being executed followed by the result. More accurately debug.
 
+.  -> current directory
+.. -> above directory
+
 -- SPECIAL VARIABLES
 
-$0 -> check shell eg. echo $0
-$SHELL -> return shell with path eg. echo "$SHELL"
+$0     -> return current shell with path eg. echo $0
+$SHELL -> return current shell with path eg. echo "$SHELL"
 
 
 -- COMMANDS
 
-tr -> Translate, squeeze, and/or delete characters from standard input, writing to standard output.
-    eg. tr a-z A-Z -> change lowercase to uppercase
+ls      -> list, returns the contents of the directory
+            eg. ls *, ls /mnt/c/Users
+pwd     -> print working directory
+more    -> filter for paging through text one screenful at a time
+            eg more file.txt, ls -al | more
+less    -> opposite of more, does not have to read the entire input file before starting
+            eg. less file.txt, ls -al | less
+touch   -> change file timestamps, if file dont't exists touch will create it
+            eg. touch file.txt
+mv      -> move (rename) files, option -b makes a backup of each existing destination file
+            eg. mv file.txt new_file.txt -> rename file, mv file.txt ../file.txt -> move file
+cp      -> copy files and directories, option -b makes a backup of each existing destination file
+            eg. cp file.txt ../file.txt -> copy file
+rm      -> remove files or directories, using rm -rf is NOT recommended
+            eg. rm -f dir/*.txt -> removes files .txt from dir directory
+cd      -> change directory
+mkdir   -> make directories
+rmdit   -> remove empty directories
+who     -> show who is logged on
+users   -> print the user names of users currently logged in to the current host
+whoami  -> print user name associated with the current effective user ID
+w       -> displays information about the users currently on the machine, and their processes
+tr      -> translate, squeeze, and/or delete characters from standard input, writing to standard output
+            eg. tr a-z A-Z -> change lowercase to uppercase

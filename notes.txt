@@ -1,3 +1,4 @@
+# SPECIAL VARIABLES
 
 $@ -> all passed arguments
 $# -> number of passed arguments
