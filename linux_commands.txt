@@ -29,8 +29,6 @@ set -f -> Disable automatic file name generation, more commonly known as "globbi
 set -e -> Stops a script immediately when something goes wrong.
 set -x -> Enables to see which command in script is being executed followed by the result. More accurately debug.
 
-.  -> current directory
-.. -> above directory
 
 -- SPECIAL VARIABLES
 
@@ -38,11 +36,37 @@ $0     -> return current shell with path eg. echo $0
 $SHELL -> return current shell with path eg. echo "$SHELL"
 
 
+-- SPECIAL CHARACTERS
+
+.   -> current directory
+..  -> parent directory
+~   -> home directory
+/   -> path directory separator
+#   -> comment or trim strings | eg. this_string="Hello World."; echo "How-To ${this_string#Hello}" --> How-To World.
+?   -> single character wildcard | eg. ls server?.log -> where ? is server id, ls ?????.txt
+*   -> character sequence wildcard | eg. ls server*
+_   -> space
+[]  -> character set wildcard | eg. ls server[0-9].log
+;   -> shell command separator
+&   -> backgroud process | eg. gedit command_address.page &
+<   -> input redirection | eg. sort < words.txt
+>   -> output redirection | eg. ls > files.txt
+|   -> pipe | eg. cat words.txt | grep [cC] | sort -r
+!   -> pipeline logical NOT and history operator | eg. [ ! -d ./backup ] && mkdir ./backup | !24 -> re-run 24th command from history | !! -> re-run previous command
+$   -> variable expressions | eg. echo $PATH
+{}  -> code block
+'   -> stops the function of all the special characters
+"   -> prevents Bash from acting on most of the special characters, exception, is the dollar sign ($)
+        , using  backslash \ prevents the following character from functioning as a special character; 
+        this is called “escaping” the character | eg. echo "Today is \$(date)" -> will print Today is \$(date)
+`   -> command replacement
+
+
 -- COMMANDS
 
-ls      -> list, returns the contents of the directory
+ls      -> list directory contents
             eg. ls *, ls /mnt/c/Users
-pwd     -> print working directory
+pwd     -> print name of current/working directory
 more    -> filter for paging through text one screenful at a time
             eg more file.txt, ls -al | more
 less    -> opposite of more, does not have to read the entire input file before starting
@@ -56,11 +80,54 @@ cp      -> copy files and directories, option -b makes a backup of each existing
 rm      -> remove files or directories, using rm -rf is NOT recommended
             eg. rm -f dir/*.txt -> removes files .txt from dir directory
 cd      -> change directory
+            eg. cd /home
 mkdir   -> make directories
+            eg. mkdir /home/SuperUser/new_directory
 rmdit   -> remove empty directories
+            eg. rmdir /home/SuperUser/new_directory
 who     -> show who is logged on
 users   -> print the user names of users currently logged in to the current host
 whoami  -> print user name associated with the current effective user ID
 w       -> displays information about the users currently on the machine, and their processes
+clear   -> clear the terminal screen
+logout  -> write utmp and wtmp entries
+exit    -> cause normal process termination (default 0)
+            eq. exit 1 -> terminate process with signal 1
+diff    -> compare files line by line
+            diff file1.txt file2.txt
+find    -> search for files in a directory hierarchy
+            eg. find /home -name plik.txt
+locate  -> search for files using indexes, may not find newly created files / directories
+            eg. locate plik.txt
+sort    -> sort lines of text files
+            eg. sort file.txt
+head    -> output the first part of files (default - 10 lines)
+            eg. head file.txt
+tail    -> output the last part of files (default - 10 lines)
+            eg. tail -f file.txt -n 50
 tr      -> translate, squeeze, and/or delete characters from standard input, writing to standard output
             eg. tr a-z A-Z -> change lowercase to uppercase
+grep    -> searches for patterns in each file
+            eg. grep cat plik.txt
+file    -> determine file type
+            eg. file plik.txt
+ln      -> make links between files
+            eg. ln -s /home/user1 directory_user1 -> cd /home/user1 will redirect to directory_user1
+
+ps      -> report a snapshot of the current processes
+            eg. ps -ef | grep -v grep | grep -i root
+kill    -> send a signal to a process (default signal for kill is TERM)
+            eg. kill 2312
+
+su      -> run a command with substitute user and group ID (defaults to running an interactive shell as root)
+            eg. su - SuperUser
+chmod   -> change file mode bits
+            eg. chmod 775 plik.txt
+chown   -> change file owner and group (in some distros only root can run this command)
+            eg. chown SuperUser plik.txt, chown SuperUser:SuperGroup plix.txt -> changes also group
+chgrp   -> change group ownership (in some distros only root can run this command)
+            eg. chgrp SuperGroup plik.txt
+adduser -> add a user to the system
+            eg. adduser SuperUser
+addgroup-> add a group to the system
+            eg. addgroup SuperGroup
