@@ -113,6 +113,7 @@ file    -> determine file type
             eg. file plik.txt
 ln      -> make links between files
             eg. ln -s /home/user1 directory_user1 -> cd /home/user1 will redirect to directory_user1
+tty     -> print the file name of the terminal connected to standard input
 
 ps      -> report a snapshot of the current processes
             eg. ps -ef | grep -v grep | grep -i root
@@ -131,3 +132,49 @@ adduser -> add a user to the system
             eg. adduser SuperUser
 addgroup-> add a group to the system
             eg. addgroup SuperGroup
+sudo    -> execute a command as another user (substitute user do)
+visudo  -> edit the sudoers file
+    Host=(user:group) cmds
+    user ALL(ALL:ALL) ALL
+        user        -> defines which user it applies to, here 'user'
+        Host ALL    -> rule applies to all users 'user' logged in from all hosts 
+        user ALL    -> the user 'user' can run the command as anyone (all)
+        group ALL   -> the user 'user' can run commands as any (all) group
+        cmds ALL    -> the user 'user' can run any (all) command
+
+
+-- PROCESSES
+
+ps      -> report a snapshot of the current processes
+    ps -x   -> all current user processes
+    ps -ef  -> all system processes
+
+    PID     -> process ID
+    TTY     -> controlling terminal
+    CMD     -> running command
+
+kill <pid>  -> terminate process
+    kill -STOP <pid>    -> stops process (not terminating)
+    kill -CONT <pid>    -> resume stopped process
+
+
+-- DIRECTORIES
+
+/bin        -> Essential User Binaries        --> stands for binary; contains base executables which are required for minimal system working
+/boot       -> Static Boot Files              --> contains the files needed to boot the system; for example, the GRUB boot loader’s files and Linux kernels are stored here
+/dev        -> Device Files                   --> contains a number of special files that represent devices; also contains pseudo-devices, which are virtual devices that don’t actually correspond to hardware
+/etc        -> Configuration Files            --> contains configuration files; directory contains system-wide configuration files
+/home       –> Home Folders                   --> contains a home folder for each user
+/lib        –> Essential Shared Libraries     --> contains libraries needed by the essential binaries in the /bin and /sbin folder; libraries needed by the binaries in the /usr/bin folder are located in /usr/lib
+/lost+found –> Recovered Files                --> if the file system crashes, a file system check will be performed at next boot; any corrupted files found will be placed in the lost+found directory, can attempt to recover as much data as possible
+/media      –> Removable Media                --> contains subdirectories where removable media devices inserted into the computer are mounted
+/mnt        –> Temporary Mount Points         --> /mnt directory is where system administrators mounted temporary file systems while using them
+/opt        –> Optional Packages              --> contains subdirectories for optional software packages; commonly used by proprietary software that doesn’t obey the standard file system hierarchy
+/proc       –> Kernel & Process Files         --> similar to the /dev directory because it doesn’t contain standard files; it contains special files that represent system and process information
+/root       –> Root Home Directory            --> is the home directory of the root user; instead of being located at /home/root, it’s located at /root
+/run        –> Application State Files        --> gives applications a standard place to store transient files they require like sockets and process IDs
+/sbin       –> System Administration Binaries --> contains essential binaries that are generally intended to be run by the root user for system administration
+/srv        –> Service Data                   --> contains "data for services provided by the system"
+/tmp        –> Temporary Files                --> applications store temporary files in the /tmp directory; these files are generally deleted whenever your system is restarted and may be deleted at any time by utilities such as tmpwatch
+/usr        –> User Binaries & Read-Only Data --> contains applications and files used by users, as opposed to applications and files used by the system
+/var        –> Variable Data Files            -->  is the writable counterpart to the /usr directory, which must be read-only in normal operation; log files and everything else that would normally be written to /usr during normal operation are written to the /var directory
