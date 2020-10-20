@@ -19,40 +19,40 @@ NC="\e[0m"
 function log_info() {
     msg=$1
     current_time=$(date +"%F %T.%3N")
-    echo -e "[${current_time}][ ${BLUE}INFO${NC}  ]: ${msg}" | tee -a "$control_file"
+    echo -e "[${current_time}][ ${BLUE}INFO${NC}  ]: ${msg}" 2>&1 | tee -a "$control_file"
 }
 
 
 function log_success() {
     msg=$1
     current_time=$(date +"%F %T.%3N")
-    echo -e "[${current_time}][${GREEN}SUCCESS${NC}]: ${msg}" | tee -a "$control_file"
+    echo -e "[${current_time}][${GREEN}SUCCESS${NC}]: ${msg}" 2>&1 | tee -a "$control_file"
 }
 
 
 function log_error() {
     msg=$1
     current_time=$(date +"%F %T.%3N")
-    echo -e "[${current_time}][ ${RED}ERROR${NC} ]: ${msg}" | tee -a "$control_file"
+    echo -e "[${current_time}][ ${RED}ERROR${NC} ]: ${msg}" 2>&1 | tee -a "$control_file"
 }
 
 
 function log_warning() {
     msg=$1
     current_time=$(date +"%F %T.%3N")
-    echo -e "[${current_time}][${LRED}WARNING${NC}]: ${msg}" | tee -a "$control_file"
+    echo -e "[${current_time}][${LRED}WARNING${NC}]: ${msg}" 2>&1 | tee -a "$control_file"
 }
 
 
 function log_debug() {
     msg=$1
     current_time=$(date +"%F %T.%3N")
-    echo -e "[${current_time}][ ${CYAN}DEBUG${NC} ]: ${msg}" | tee -a "$control_file"
+    echo -e "[${current_time}][ ${CYAN}DEBUG${NC} ]: ${msg}" 2>&1 | tee -a "$control_file"
 }
 
 function log_input() {
     msg=$1
     current_time=$(date +"%F %T.%3N")
-    echo -en "[${current_time}][ ${BLUE}INPUT${NC} ]: ${msg}" | tee -a "$control_file"
+    echo -en "[${current_time}][ ${BLUE}INPUT${NC} ]: ${msg}" 2>&1 | tee -a "$control_file"
     read input
 }

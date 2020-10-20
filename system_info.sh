@@ -13,6 +13,7 @@ function usage_generate() {
     echo -e "\t\t${BLUE}-u --user-info      -- Check current users"
     echo -e "\t\t${BLUE}-g --group-info     -- Check current groups"
     echo -e "\t\t${BLUE}-n --network-info   -- Check current net interfaces"
+    exit 0
 }
 
 
