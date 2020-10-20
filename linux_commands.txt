@@ -132,15 +132,6 @@ adduser -> add a user to the system
             eg. adduser SuperUser
 addgroup-> add a group to the system
             eg. addgroup SuperGroup
-sudo    -> execute a command as another user (substitute user do)
-visudo  -> edit the sudoers file
-    Host=(user:group) cmds
-    user ALL(ALL:ALL) ALL
-        user        -> defines which user it applies to, here 'user'
-        Host ALL    -> rule applies to all users 'user' logged in from all hosts 
-        user ALL    -> the user 'user' can run the command as anyone (all)
-        group ALL   -> the user 'user' can run commands as any (all) group
-        cmds ALL    -> the user 'user' can run any (all) command
 
 
 -- PROCESSES
@@ -177,4 +168,21 @@ kill <pid>  -> terminate process
 /srv        –> Service Data                   --> contains "data for services provided by the system"
 /tmp        –> Temporary Files                --> applications store temporary files in the /tmp directory; these files are generally deleted whenever your system is restarted and may be deleted at any time by utilities such as tmpwatch
 /usr        –> User Binaries & Read-Only Data --> contains applications and files used by users, as opposed to applications and files used by the system
-/var        –> Variable Data Files            -->  is the writable counterpart to the /usr directory, which must be read-only in normal operation; log files and everything else that would normally be written to /usr during normal operation are written to the /var directory
+/var        –> Variable Data Files            --> is the writable counterpart to the /usr directory, which must be read-only in normal operation; log files and everything else that would normally be written to /usr during normal operation are written to the /var directory
+
+
+-- SUDO
+
+sudo    -> execute a command as another user (substitute user do)
+visudo  -> edit the sudoers file
+    Host=(user:group) cmds
+    user ALL(ALL:ALL) ALL
+        user        -> defines which user it applies to, here 'user'
+        Host ALL    -> rule applies to all users 'user' logged in from all hosts 
+        user ALL    -> the user 'user' can run the command as anyone (all)
+        group ALL   -> the user 'user' can run commands as any (all) group
+        cmds ALL    -> the user 'user' can run any (all) command
+
+    vagrant ALL(ALL:ALL) NOPASSWD:ALL   -> allows to run any command without giving password
+
+    /etc/sudoers.d/xxxx -> in this location we can create files that will be loaded automatically; files should be root:root with permissions of 0440
