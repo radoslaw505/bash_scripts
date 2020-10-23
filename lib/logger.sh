@@ -16,43 +16,55 @@ UWHITE="\e[4;37m"
 NC="\e[0m"
 
 
-function log_info() {
+function log_info {
     msg=$1
     current_time=$(date +"%F %T.%3N")
     echo -e "[${current_time}][ ${BLUE}INFO${NC}  ]: ${msg}" 2>&1 | tee -a "$control_file"
+    sed 's/\[0;34m//' < "$control_file" > "${control_file}.tmp" && mv "${control_file}.tmp" "${control_file}"
+    sed -e 's/\[0m//' < "$control_file" > "${control_file}.tmp" && mv "${control_file}.tmp" "${control_file}"
 }
 
 
-function log_success() {
+function log_success {
     msg=$1
     current_time=$(date +"%F %T.%3N")
     echo -e "[${current_time}][${GREEN}SUCCESS${NC}]: ${msg}" 2>&1 | tee -a "$control_file"
+    sed 's/\[0;32m//' < "$control_file" > "${control_file}.tmp" && mv "${control_file}.tmp" "${control_file}"
+    sed -e 's/\[0m//' < "$control_file" > "${control_file}.tmp" && mv "${control_file}.tmp" "${control_file}"
 }
 
 
-function log_error() {
+function log_error {
     msg=$1
     current_time=$(date +"%F %T.%3N")
     echo -e "[${current_time}][ ${RED}ERROR${NC} ]: ${msg}" 2>&1 | tee -a "$control_file"
+    sed 's/\[0;31m//' < "$control_file" > "${control_file}.tmp" && mv "${control_file}.tmp" "${control_file}"
+    sed -e 's/\[0m//' < "$control_file" > "${control_file}.tmp" && mv "${control_file}.tmp" "${control_file}"
 }
 
 
-function log_warning() {
+function log_warning {
     msg=$1
     current_time=$(date +"%F %T.%3N")
     echo -e "[${current_time}][${LRED}WARNING${NC}]: ${msg}" 2>&1 | tee -a "$control_file"
+    sed 's/\[1;31m//' < "$control_file" > "${control_file}.tmp" && mv "${control_file}.tmp" "${control_file}"
+    sed -e 's/\[0m//' < "$control_file" > "${control_file}.tmp" && mv "${control_file}.tmp" "${control_file}"
 }
 
 
-function log_debug() {
+function log_debug {
     msg=$1
     current_time=$(date +"%F %T.%3N")
     echo -e "[${current_time}][ ${CYAN}DEBUG${NC} ]: ${msg}" 2>&1 | tee -a "$control_file"
+    sed 's/\[0;36m//' < "$control_file" > "${control_file}.tmp" && mv "${control_file}.tmp" "${control_file}"
+    sed -e 's/\[0m//' < "$control_file" > "${control_file}.tmp" && mv "${control_file}.tmp" "${control_file}"
 }
 
-function log_input() {
+function log_input {
     msg=$1
     current_time=$(date +"%F %T.%3N")
     echo -en "[${current_time}][ ${BLUE}INPUT${NC} ]: ${msg}" 2>&1 | tee -a "$control_file"
+    sed 's/\[0;34m//' < "$control_file" > "${control_file}.tmp" && mv "${control_file}.tmp" "${control_file}"
+    sed -e 's/\[0m//' < "$control_file" > "${control_file}.tmp" && mv "${control_file}.tmp" "${control_file}"
     read input
 }

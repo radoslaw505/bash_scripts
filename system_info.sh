@@ -17,7 +17,7 @@ function usage_generate() {
 }
 
 
-function options () {
+function options() {
     case $1 in
         "-h"|"--help" )
             usage_generate
