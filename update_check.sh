@@ -6,14 +6,14 @@ LIB_PATH="/mnt/c/Users/rados/Projects/Bash/bash_scripts/LIB/"
 . ${LIB_PATH}/logger.sh
 
 
-function usage_generate() {
+function usage_generate {
     echo -e "${BLUE}Usage: $0 [-h --help] [package_name]"
     echo -e "\t\t${BLUE}-h --help     -- Show this message"
     echo -e "\t\t${BLUE}-package_name -- Replace this with package name you want to install"
 }
 
 
-function update_packages() {
+function update_packages {
     log_debug "Updating packages..."
     sudo apt-get update |& tee -a "$control_file" &> /dev/null && log_success "Update has been completed."
     log_debug "Upgrading packages..."
@@ -21,7 +21,7 @@ function update_packages() {
 }
 
 
-function check_install() {
+function check_install {
     for package in "$@"; do
         dpkg -s "$package" &> /dev/null
         if [ $? -eq 0 ]; then
@@ -40,7 +40,7 @@ function check_install() {
 }
 
 
-function main() {
+function main {
     if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
         usage_generate
         exit 1

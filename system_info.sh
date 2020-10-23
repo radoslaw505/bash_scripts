@@ -6,7 +6,7 @@ LIB_PATH="/mnt/c/Users/rados/Projects/Bash/bash_scripts/LIB/"
 . ${LIB_PATH}/logger.sh
 
 
-function usage_generate() {
+function usage_generate {
     echo -e "${BLUE}Usage: $0 [-h --help][-s --system-info][-u --user-list][-g --group-list][-n --net-interfaces]"
     echo -e "\t\t${BLUE}-h --help           -- Show this message"
     echo -e "\t\t${BLUE}-s --system-info    -- Check system informations"
@@ -17,7 +17,7 @@ function usage_generate() {
 }
 
 
-function options() {
+function options {
     case $1 in
         "-h"|"--help" )
             usage_generate
@@ -46,14 +46,14 @@ function options() {
 }
 
 
-function system_info() {
+function system_info {
     echo -e "${BLUE}Available arguments:"
     echo -e "\t${BLUE}kernel    - Return kernel version${NC}"
     echo -e "\t${BLUE}os        - Return os type${NC}"
     echo -e "\t${BLUE}distro    - Return distro version${NC}"
     echo -e "\t${BLUE}platform  - Return platform version${NC}"
 
-    log_input "Enter argument: "
+    log_input "Enter argument: " input
     case "$input" in
         kernel)
             log_success "Your Kernel version is: $(uname -r)"
@@ -76,14 +76,14 @@ function system_info() {
 }
 
 
-function user_list() {
+function user_list {
     echo -e "${BLUE}Available arguments:"
     echo -e "\t${BLUE}home    - Returns users with patch /home${NC}"
     echo -e "\t${BLUE}uid     - Return users with UID > 1000${NC}"
     echo -e "\t${BLUE}homeuid - Returns users with patch /home and UID > 1000${NC}"
     echo -e "\t${BLUE}bash    - Returns users with /bin/bash shell${NC}\n"
 
-    log_input "Enter argument: "
+    log_input "Enter argument: " input
     case "$input" in
         home)
             log_success "Users list:"
@@ -103,7 +103,7 @@ function user_list() {
             ;;
         *)
             log_warning "Given argument $1 is invalid."
-            log_input "Do you want to list all users?[y/N]: "
+            log_input "Do you want to list all users?[y/N]: " input
             case "$input" in
                 [yY])
                     log_success "Users list:"
@@ -123,12 +123,12 @@ function user_list() {
 }
 
 
-function group_list() {
+function group_list {
     echo -e "${BLUE}Available arguments:"
     echo -e "\t${BLUE}cut    - Return groups using 'cut' command${NC}"
     echo -e "\t${BLUE}awk    - Return groups using 'awk' command${NC}"
 
-    log_input "Enter argument: "
+    log_input "Enter argument: " input
     case "$input" in
         cut)
             log_success "Group list:"
@@ -147,7 +147,7 @@ function group_list() {
 }
 
 
-function net_interfaces() {
+function net_interfaces {
     echo -e "${BLUE}Available arguments:"
     echo -e "\t${BLUE}inet      - Return network interfaces${NC}"
     echo -e "\t${BLUE}stat      - Return names ofnetwork interfaces with status UP/DOWN${NC}"
@@ -156,7 +156,7 @@ function net_interfaces() {
     echo -e "\t${BLUE}iaddress  - Return list of interfaces witch IPv4 and IPv6${NC}"
     echo -e "\t${BLUE}ifls      - Return list of network devices and their names (interfaces)${NC}"
 
-    log_input "Enter argument: "
+    log_input "Enter argument: " input
     case "$input" in
         inet)
             log_success "Network interfaces:"
@@ -195,13 +195,13 @@ function net_interfaces() {
 }
 
 
-function disk_info() {
+function disk_info {
     echo -e "${BLUE}Available arguments:"
     echo -e "\t${BLUE}space     - Return space available on all currently mounted file systems${NC}"
     echo -e "\t${BLUE}all       - Return space available on all currently mounted file systems include pseudo, duplicate, inaccessible file systems${NC}"
     echo -e "\t${BLUE}total     - Return all entries insignificant to available space, and produce a grand total${NC}"
 
-    log_input "Enter argument: "
+    log_input "Enter argument: " input
     case "$input" in
         "space")
             log_success "Space available on all currently mounted file systems:"
@@ -224,7 +224,7 @@ function disk_info() {
 }
 
 
-function main() {
+function main {
     options "$1"
     log_success "Control file ${UWHITE}${control_file}${NC} created."
 

@@ -1,4 +1,0 @@
-[2020-10-23 22:47:49.826][ INFO[0m  ]: message test
-[2020-10-23 22:47:49.826][ INFO[0m  ]: message test
-[2020-10-23 22:47:49.826][ INFO[0m  ]: message test
-[2020-10-23 22:47:49.826][ INFO[0m  ]: message test
