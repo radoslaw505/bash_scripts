@@ -22,16 +22,16 @@ function create_namespace {
 
     if [[ "$1" =~ ^-?[0-9]+$ && "$1" -ge 1 ]]; then
         for ((i=1, ii=1; i<="$1"; i++)); do
-            ls "/var/run/netns/namespace${ii}" 2>> "/dev/null" | tee -a "$control_file"
+            ls "/var/run/netns/namespace${ii}" 2>> "/dev/null" 1>> "$control_file"
 
-            while [ $/ -eq 0 ]; do
+            while [ $? -eq 0 ]; do
                 ((ii++))
                 log_info "Namespace${ii} already exists."
-                ls "/var/run/netns/namespace${ii}" 2>> "/dev/null" | tee -a "$control_file"
+                ls "/var/run/netns/namespace${ii}" 2>> "/dev/null" 1>> "$control_file"
             done
 
             log_debug "Creating namespace${ii}..."
-            sudo ip netns add namespace${ii} 2>> "${SCRIPT_PATH}err.log" | tee -a "$control_file"
+            sudo ip netns add namespace${ii} 2>> "${SCRIPT_PATH}err.log" 1>> "$control_file"
 
             if [ $? -eq 0 ]; then
                 log_success "Namespace${ii} has been created succesfully."
@@ -78,7 +78,7 @@ function clean_namespace {
 
     for element in $(ip netns list); do
         log_debug "Deleting an element: ${element}..."
-        sudo ip netns del "${element}" 2>> "${SCRIPT_PATH}err.log" | tee -a "$control_file"
+        sudo ip netns del "${element}" 2>> "${SCRIPT_PATH}err.log" 1>> "$control_file"
 
         if [ $? -eq 0 ]; then
             log_success "Element: ${element} has been removed succesfully."
@@ -103,7 +103,7 @@ function create_internal_ovs_port {
     fi
 
     log_debug "Creating interface ${1}..."
-    sudo ovs-vsctl add-port "$2" "$1" -- set Interface "$1" type=internal 2>> "${SCRIPT_PATH}err.log" | tee -a "$control_file"
+    sudo ovs-vsctl add-port "$2" "$1" -- set Interface "$1" type=internal 2>> "${SCRIPT_PATH}err.log" 1>> "$control_file"
 
     if [ $? -eq 0 ]; then
         log_success "Interface veth${1} with bridge ${2} has been created succesfully."
@@ -121,12 +121,13 @@ function create_ovs {
     fi
 
     log_debug "Creating ovs ${1}..."
-    sudo ovs-vsctl add-br "$1" 2>> "${SCRIPT_PATH}err.log" | tee -a "$control_file"
+    sudo ovs-vsctl add-br "$1" 2>> "${SCRIPT_PATH}err.log" 1>> "$control_file"
 
     if [ $? -eq 0 ]; then
         log_success "Ovs ${1} has been created succesfully."
     else
         log_error "Error occured while creating ovs. Check: ${SCRIPT_PATH}err.log for more details."
+        exit 1
     fi
 }
 
@@ -139,26 +140,80 @@ function action_namespace {
         PS3="[${option2}]: "
 
         ns="${option2}"
-        eval set $action_ns
+        eval set "${action_ns}"
 
         select action in "$@"; do
-            case "${option2}" in
+            case "${action}" in
                 "Add network interface")
+                    show_interfaces
+                    echo "-----------------------------------------------------"
+                    log_input "Choose interface: " if_set
+                    sudo ip link set "${if_set}" netns "${ns}" 2>> "${SCRIPT_PATH}err.log" 1>> "$control_file"
+                    if [ $? -eq 0 ]; then
+                        log_success "Interface ${if_set} has been added succesfully."
+                    else
+                        log_error "Error occured while adding interface. Check: ${SCRIPT_PATH}err.log for more details."
+                        exit 1
+                    fi
                     break
                     ;;
                 "Set IP address")
+                    sudo ip netns exec "${ns}" ip -o link show | awk '{print $2,$9}'
+                    log_input "Choose interface: " if_set
+                    log_input "Enter IP address (eg. 10.10.10.10/24): " ip_set
+
+                    sudo ip netns exec "${ns}" ip a a "${ip_set}" dev "${if_set}" 2>> "${SCRIPT_PATH}err.log" 1>> "$control_file"
+                    if [ $? -eq 0 ]; then
+                        log_success "IP address ${ip_set} has been added succesfully."
+                    else
+                        log_error "Error occured while adding IP address. Check: ${SCRIPT_PATH}err.log for more details."
+                        exit 1
+                    fi
+
+                    sudo ip netns exec "${ns}" ip l s dev "${if_set}" up 2>> "${SCRIPT_PATH}err.log" 1>> "$control_file"
+                    if [ $? -eq 0 ]; then
+                        log_success "IP address ${if_set} has been set-up succesfully."
+                    else
+                        log_error "Error occured while setting-up IP address. Check: ${SCRIPT_PATH}err.log for more details."
+                        exit 1
+                    fi
                     break
                     ;;
                 "Clear IP address")
+                    show_interfaces
+                    echo "-----------------------------------------------------"
+                    log_input "Choose interface: " if_set
+
+                    sudo ip netns exec "${ns}" ip a f dev "${if_set}" 2>> "${SCRIPT_PATH}err.log" 1>> "$control_file"
+                    if [ $? -eq 0 ]; then
+                        log_success "IP address ${ip_set} has been cleared succesfully."
+                    else
+                        log_error "Error occured while clearing IP address. Check: ${SCRIPT_PATH}err.log for more details."
+                        exit 1
+                    fi
+
+                    sudo ip netns exec "${ns}" ip l s dev "${if_set}" down 2>> "${SCRIPT_PATH}err.log" 1>> "$control_file"
+                    if [ $? -eq 0 ]; then
+                        log_success "IP address ${if_set} has been set-down succesfully."
+                    else
+                        log_error "Error occured while setting-down IP address. Check: ${SCRIPT_PATH}err.log for more details."
+                        exit 1
+                    fi
                     break
                     ;;
                 "Enter command")
+                    log_input "Enter command (eg. ping 10.10.10.10): " my_cmd
+                    sudo ip netns exec "${ns}" "${my_cmd}" 2>> "${SCRIPT_PATH}err.log" 1>> "$control_file"
+                    if [ $? -eq 0 ]; then
+                        log_success "Command ${my_cmd} has been executed succesfully."
+                    else
+                        log_error "Error occured while executing command. Check: ${SCRIPT_PATH}err.log for more details."
+                        exit 1
+                    fi
                     break
                     ;;
                 "Exit")
-                    break
-                    ;;
-                "Add network interface")
+                    local all_done=1
                     break
                     ;;
             esac
@@ -180,13 +235,13 @@ function press_any_key {
 function main_menu {
     options="\"Create network namespace\" \"Show namespace\" \"Clear all namespaces\" \"Add interface\" \"Create ovs-switch\" \"Enter command\" \"Exit\""
 
-    eval set $options
+    eval set "${options}"
 
     local all_done=0
     while (( !$all_done )); do
         PS3="Choose option: "
 
-        select option in $@; do
+        select option in "$@"; do
             case "${option}" in
                 "Create network namespace")
                     log_input "Enter number of namespaces to create: " ns_number
@@ -228,14 +283,13 @@ function main_menu {
                     break
                     ;;
                 "")
-                    log_error "You entered wrong parameter: ${1}. "
+                    log_error "You entered wrong parameter: ${1}."
                     break
                     ;;
             esac
         done
     done
 }
-
 
 
 main_menu

@@ -1,1 +1,8 @@
 Command "hw" is unknown, try "ip link help".
+ovs-vsctl: unix:/var/run/openvswitch/db.sock: database connection failed (No such file or directory)
+ovs-vsctl: unix:/var/run/openvswitch/db.sock: database connection failed (No such file or directory)
+ovs-vsctl: no bridge named br0
+Cannot find device "5"
+Cannot open network namespace "exit": No such file or directory
+Cannot open network namespace "exit": No such file or directory
+Device "4" does not exist.
