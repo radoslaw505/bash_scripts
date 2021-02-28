@@ -1,0 +1,64 @@
+##################################
+## USERS / GROUPS / PERMISSIONS ##
+##################################
+
+# USERS / IF THERE IS, IT SHOULD BE ADDED HERE
+	/etc/passwd
+# GROUPS TO WHICH THE USER BELONGS
+	/etc/group
+# USERS PASSWORDS
+	/etc/shadow
+	
+	
+# CREATING NEW USER (on root)
+	$ adduser weedCartier # create new user (and /home dir for him)
+	$ passwd weedCartier  # create password for him
+	$ usermod -aG wheel weedCartier # add weedCartier to wheel group (sudo group on CentOs)
+	# $ userdel -r weedCartier # deleting user
+	
+	
+
+# USER PRIVILEGE:
+- add user to sudo group:
+	$ usermod -aG sudo radoslaw # where radoslaw is username
+- check groups
+	$ groups # user need to be added to /etc/group -> sudo:x:27:radoslaw
+
+# OBRAINING PRIVILEGE OF ANOTHER USER:
+su		-> open new shell with root user (superuser) WITHOUT loading profile
+su - 	-> open new shell with root user (superuser) WITH loading profile
+su - username -> open new shell with username with loading profile
+
+# PERMMISIONS TO FILE EXAMPLE:
+
+- example #1:
+	drwxr-xr-x.  19 root root       4096 02-16 13:37 var
+
+	r(4) - read
+	w(2) - write
+	e(1) - execute
+
+	user: root	-> rwx
+	group: root	-> r-x
+	all others	-> r-x
+
+	chmod 600 -> number in bytes:
+		- first value of number is priviliges for user (here: root), 6 -> read, write | 4 -> read, 2 -> write
+		*- for example 3 is for -> write(2), read(1) / 5 -> read(4), execute(1)
+		- second value goes for group -> 0 is none permissions
+		- third for all others useres
+		
+	file after chmod 600:
+	drw-------.   19 root root       4096 02-16 13:47 var
+
+	user: root	-> rw-
+	group: root	-> ---
+	all others	-> ---
+	
+- example #2 add only execute permission:
+	-rw-rw-r--. 1 radoslaw radoslaw 35 02-17 10:00 skrypt1.sh
+
+	chmod +x skrypt1.sh # add execute permission to user, group and all others
+	
+	-rwxrwxr-x. 1 radoslaw radoslaw 35 02-17 10:00 skrypt1.sh
+

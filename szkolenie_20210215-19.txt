@@ -1,0 +1,978 @@
+Wersja FINAL
+Kontakt: marcin@karpezo.pl, 795806500
+
+https://jitsi.wioo.waw.pl/kurslinux1 ← Kurs odbywamy tu
+
+Wyświetlenie loga z działania jądra systemu linux:
+$ sudo dmesg | less
+
+konfiguracja firewalla na ubuntu/debian
+
+$ sudo apt install ufw
+
+wypuść cały ruch 
+$ sudo ufw default allow outgoing
+
+zablokuj cały ruch przychodzący
+$ sudo default deny incoming
+
+wpuść ruch po ssh (22/tcp)
+$ sudo ufw allow ssh
+
+uruchomienie ufw i wprowadzonych reguł (do wykonania jednorazowo)
+$ sudo ufw enable
+
+podgląd konfiguracji firewalla
+$ sudo ufw status
+lub
+$ sudo ufw status numbered
+
+usuwanie reguł
+$ sudo ufw delete [nr reguły z powyższej komendy]
+
+sprawdzenie reguł przed aktywacją fw
+$ sudo ufw show added
+lub 
+$ sudo cat /etc/ufw/user.rules
+
+Usuwanie mechanizmu automatycznych aktualizacji, który nas czasem blokuje w ubuntu:
+    $ sudo pkill unattended-upgr
+    $ sudo apt remove unattended-upgrades
+
+
+Tworzenie katalogów i plików w drzewie:
+    mkdir -p katalog1/kat{1,2,3,4,5}/tester{1,2,3,4,5,6}
+    touch katalog1/kat{1,2,3,4,5}/tester{1,2,3,4,5,6}/plik12.txt
+    touch katalog1/kat{1,2,3,4,5}/tester{1,2,3,4,5,6}/plik12{,-133}.txt
+Skasowanie katalogów tester 1-4:
+    rm -r katalog1/kat{1,2,3,4,5}/tester{1,2,3,4}
+
+Putty
+https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html
+
+
+CentOS7
+Instalacja dodatkowych pakietów
+$ sudo yum install vim git yum-cron
+
+Aktualizacja systemu
+$ sudo yum update
+
+Konfiguracja automatycznych aktualizacji bezpieczeństwa
+$ sudo vim /etc/yum/yum-cron.conf 
+
+ustawiamy następujące linijki
+update_cmd = security
+apply_updates = yes
+emit_via = email
+
+Następnie (startowanie usług w systemie):
+    # systemctl start yum-cron
+    # systemctl enable yum-cron
+lub:
+    # systemctl enable --now yum-cron
+
+Wyłączanie usług w systemie:
+    # systemctl stop yum-cron
+    # systemctl disable yum-cron
+lub:
+ # systemctl disable --now yum-cron    
+
+Metody restartowania usług:
+    # systemctl reload usługa (przeładowanie bez ubijania działajacego daemona, pozostawi działającą konfigurację jeśli w nowej wystąpią błędy)
+    # systemctl restart usługa (ubija daemona i startuje nowego nawet jeśli zawiera błędy)
+
+Sprawdzenie statusu usługi:
+    # systemctl status usługa
+
+Konfiguracja firewalla w centos7/8
+$ sudo yum install firewalld
+$ sudo systemctl enable --now firewalld
+$ sudo firewall-cmd --state
+
+Wypisz wszystkie strefy i ich właściwości:
+$ sudo firewall-cmd --list-all-zones | less
+
+Zmiana strefy dla wybranego interfejsu (po restarcie zostanie ponownie ustawiona domyślna)
+$ sudo firewall-cmd --zone=home --change-interface=enp0s3
+
+Zmiana domyślnej strefy, do której przypisywane są nowe interfejsy sieciowe
+$ sudo firewall-cmd --set-default-zone=drop
+
+
+Zmiana na stałe strefy dla interfejsu:
+$ sudo firewall-cmd --zone=public --change-interface=enp0s3 --permanent
+
+Pobieranie informacji o interfejsach sieciowych dostępnych w systemie:
+$ ip a
+
+Sprawdzenie aktywnych stref i przypisanych do nich interfejsów
+$ sudo firewall-cmd --get-active-zones
+
+Sprawdzenie listy usług obsługiwanych przez fireewald (nie musimy wtedy definiować ich za pomocą portu/protokołu)
+$ firewall-cmd --get-services
+
+Otwarcie portu http
+$ sudo firewall-cmd --zone=public --add-service=http
+
+Zapisanie zmiany pomiędzy restartami
+$ sudo firewall-cmd --zone=public --add-service=http --permanent
+
+Otwarcie portu 5000 po protokole tcp:
+$ sudo firewall-cmd --zone=public --add-port=5000/tcp
+    
+Otwarcie przedziału portów:
+$ sudo firewall-cmd --zone=public --add-port=4990-4999/udp
+
+
+Instalowanie pakietu z narzędziami sieciowymi:
+    $ sudo yum install net-tools
+    
+Sprawdzenie aktywnych usług i portów, na których nasłuchują:
+    $ sudo netstat -tulpn
+    
+Tmux
+$ sudo yum install tmux
+
+Pierwsze uruchomienie tmux:
+    $ tmux
+
+Przydatne skróty:
+Tworzenie nowej sesji: Ctrl-b c
+   Przełączanie między sesjami: C-b [cyfra z dolnego paska]
+   Lista sesji: C-b w
+   Wyjście z sesji, tak żebyśmy mogli do niej później wrócić: Ctrl-b d
+   Zamknięcie sesji (jednej z kilku): Ctrl-b x
+   Przejście do trybu kopiowania (scroll lock): C-b [ 
+       Opuszczenie ↑ trybu: Esc
+   Wyświetlenie pomocy: C-b ?
+
+Powrót do odłączonej sesji (jeśli jest jedna):
+    $ tmux attach
+Lista uruchomionych sesji:
+    $ tmux list-sessions
+    
+Powrót do sesji o wybranym numerze:
+    $ tmux attach -t [numer sesji lub nazwa]
+Utworzenie nowej sesji o wskazanej przez nas nazwie:
+    $ tmux new -A -s [nazwa_sesji]
+To samo polecenie wykorzystamy do powrotu do tejże sesji. Oznacza ono: Tmux, stwórz mi nową sesję o nazwie [nazwa_sesji] lub przywróć mi już istniejącą.
+    
+    
+Docker na CentOS7
+
+Instalacja:
+    $ sudo yum install docker
+
+Konfiguracja firewallD:
+    $ sudo firewall-cmd --zone=trusted --change-interface=docker0 --permanent
+    $ sudo firewall-cmd --zone=trusted --add-masquerade --permanent
+    $ firewall-cmd --reload
+    
+Do konfiguracji iptables wymagane jest wyłączenie firewallD:
+    $ sudo systemctl disable --now firewalld
+
+Konfiguracja iptables:
+    $ sudo yum install iptables-services
+    Wyczyszczenie konfiguracji FW:
+        $ sudo iptables -F
+    Blokujemy wszystkie połączenia przychodzące i forwarding:
+        $ sudo iptables -P INPUT DROP
+        $ sudo iptables -P FORWARD DROP
+    Zezwalaj na połączenia wychodzące:
+        $ sudo iptables -P OUTPUT ACCEPT
+    Otwarcie ruchu na interfejsie loop:
+        $ sudo iptables -A INPUT -i lo -j ACCEPT
+    Pozwalamy na odpowiedzi w połączeniach, które zainicjowaliśmy:
+        $ sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+        
+    Sprawdzenie istniejących reguł:
+        $ sudo iptables -L INPUT -v -n --line-numbers
+    Otwieramy port 22
+        $ sudo iptables -I INPUT 3 -i enp0s3 -p tcp --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT
+    Otwieramy port 80
+        $ sudo iptables -I INPUT 4 -i enp0s3 -p tcp --dport 80 -m state --state NEW,ESTABLISHED -j ACCEPT
+    
+    Zapisanie konfiguracji:
+        $ sudo -s
+        # iptables-save > /etc/sysconfig/iptables
+    Uruchamianie iptables po restarcie systemu:
+        $ sudo systemctl enable --now iptables
+    Ponowne uruchomienie dockera, żeby zaczął korzystać z iptables:
+        $ sudo systemctl restart docker
+    Podgląd aktywnej konfiguracji iptables:
+        $ sudo iptables -L
+
+Utworzenie pliku wymiany (swap) w systemie linux (zalecana wielkość to 4G):
+     sudo fallocate -l 1G /swapfile
+     sudo chmod 600 /swapfile
+     sudo mkswap /swapfile
+     sudo swapon /swapfile
+Dokonujemy edycji pliku /etc/fstab, by nasz swapfile był za każdym razem włączany wraz z systemem:
+     sudo vim /etc/fstab
+     na końcu pliku dodajemy linię o zawartości:
+         /swapfile       none    swap    sw      0       0
+
+Odmontowanie swapfile:
+    sudo swapoff /swapfile
+
+Modyfikacja parametrów systemowych (jak ochoczo system będzie umieszczał dane w swapie)
+        sudo sysctl vm.swappiness=10
+        sudo sysctl vm.vfs_cache_pressure=50
+    Ustawienia te czynimy permanentnymi przez umieszczenie ich w pliku /etc/sysctl.conf:
+        vm.swappiness=10
+        vm.vfs_cache_pressure=50
+
+VIM
+https://sirmacik.net/wp-content/uploads/downloads/vim.pdf ← Książka o vimie
+Przystosowanie vima do pracy z plikami YAML w pliku ~/.vimrc
+
+set nocompatible
+filetype plugin indent on
+syntax on
+
+set autoindent
+set expandtab
+set softtabstop=4
+set shiftwidth=4
+
+set encoding=utf-8
+set fileencoding=utf-8
+set tw=80
+set mouse=a
+
+set ignorecase
+set smartcase
+set incsearch
+set showmatch
+set hlsearch
+
+autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab list lcs+=space:·
+autocmd BufNewFile,BufRead *.yaml, *.yml set filetype=yaml
+
+Komentowanie sekcji w VIM:
+    - Ctrl-v, żeby zaznaczyć linijki, które chcemy zakomentować
+    - Shift-i żeby wejść do trybu wprowadzania
+    - dokonujemy zmianę w jednej z linii
+    - Escape, po chwili wprowadza dla wszystkich uprzednio zaznaczonych
+
+(by wkleić w vim ustawmy wcześniej :set paste )
+~/docker-compose.yml
+
+---
+version: '2'
+services:
+  db:
+    image: mariadb:latest
+    volumes:
+      - db_wp:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "tiriri332342"
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: adminer
+      MYSQL_PASSWORD: "ttjdj3928284mf"
+  wp:
+    image: wordpress:latest
+    ports:
+      - "80:80"
+    restart: always
+    working_dir: /var/www/html
+    volumes:
+      - ./wordpress/wp-content:/var/www/html/wp-content
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: adminer
+      WORDPRESS_DB_PASSWORD: "ttjdj3928284mf"
+      WORDPRESS_TABLE_PREFIX: wordek_
+
+volumes:
+  db_wp: {}
+
+
+Instalacja narzędzia docker-compose w Centos7:
+    $ sudo yum install python3-pip
+    (instaluje menadżera bibliotek języka python)
+    $ sudo pip3 install --upgrade pip
+    $ sudo pip3 install docker-compose
+Dodanie ew. brakującej ścieżki, gdzie nasze środowisko ma szukać programów do odpalenia w pliku konfiguracyjnym basha:
+    $ echo "export PATH=\"/usr/local/bin:$PATH\"" >> .bashrc
+Wczytanie nowej konfiguracji basha:
+    $ . .bashrc
+
+Utworzenie katalogu dla danych wordpressa: 
+    $ mkdir -p wordpress/wp-content
+
+
+Uruchomienie docker-compose i kontenerów z przepisu:
+    $ sudo /usr/local/bin/docker-compose up
+    (dobre, by testowo sprawdzić czy wszystko odpala się poprawnie, przerywamy przez Ctrl-c)
+lub
+    $ sudo /usr/local/bin/docker-compose up -d
+    (by kontenery działały w tle nawet po wylogowaniu)
+
+
+
+Debian
+
+Uzyskiwanie uprawnień superużytkownika:
+    $ su -
+    
+Po zainstalowaniu pakietu sudo dodajemy się do właściwej grupy:
+    # usermod -aG sudo nazwa-uzytkownika
+
+Instalacja programów do archiwizacji:
+    $ sudo apt install plzip lzip zip unzip zstd p7zip-full
+
+Tworzymy przykładową strukturę katalogów i pliki do zabaw z archiwizacją:
+    $ mkdir -p archiwum/var/program{1,2,3}/dane
+    $ touch archiwum/var/program{1,2,3}/dane/dane{,1,2,3,4}.txt
+
+Utworzenie archiwum tar:
+    $ tar cv archiwum > arch.tar
+tar.gz:
+    $ tar cv archiwum | gzip --best > arch.tar.gz
+tar.bz:
+    $ tar cfvj arch.tar.bz2 archiwum/
+tar.xz:
+    $ tar cJf arch.tar.xz archiwum/
+tar.lz:
+    $ tar cv ~/archiwum | lzip -c -f - > arch2.tar.lz
+    (rozpakowywanie archiwum tar.lz)
+    $ tar xf arch2.tar.lz
+    lub by wykonać akcję kompresji wielowątkowo:
+    $ tar cv ~/archiwum > archiwum.tar
+    $ plzip -c -f archiwum.tar > archiwum.tar.lz
+    (rozpakowywanie wielowątkowe):
+    $ plzip -d archiwum.tar.lz
+tar.zst:
+    $ tar cv ~/archiwum | zstd -c -z -q - > arch.tar.zst
+    (rozpakowywanie archiwum)
+    $ tar -I zstd -xvf archiwum.tar.zst
+tar.7z:
+    (pakiet p7zip-full)
+    $ tar cv katalog_z_danymi | 7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on -si archiwum.tar.7z
+    (rozpakowanie archiwum 7z)
+    $ tar -I 7za -xvf archiwum.tar.7z
+.zip:
+    $ zip -r arch.zip katalog_do_spakowania/
+    (rozpakowanie)
+    $ unzip arch.zip
+.rar, rozpakowanie archiwum:
+    $ unrar arch.rar
+Rozpakowywanie pozostałych archiwów tar:
+    $ tar xf archiwum.tar.{gz,bz,lz}
+
+Uruchomienie zadania z najmniejszym priorytetem, by pozwolić na normalną realizację pozostałych zadań serwera:
+    $ nice -19 plzip -c -f archiwum.tar > archiwum.tar.lz
+
+https://sirmacik.net/optymalne-metody-kompresji-archiwow/
+
+
+Synchronizacja danych (backupowanie również) z rsync
+
+
+Rsync, często wykonywane komendy:
+    $ rsync -azP (-z oznacza włączenie kompresji w locie)
+    $ rsync -avP (-v wyświetlenie szczegółów działania, -P wyświetlenie postępu procesu)
+Rsync, utworzenie pełnej kopii zapasowej naszego dysku:
+    # rsync -avAXHS --progress --exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"} / /sciezka/do/katalogu/docelowego
+Szybkie kopiowanie dużych ilości danych po ssh:
+    $ rsync -aHAXxv --numeric-ids --progress -e "ssh -T -o Compression=no -x" /mnt/upload/files/ admin@10.26.41.14:/upload/files/
+
+
+Kompilacja oprogramowania w debianie:
+     (najczęściej informacje o krokach koniecznych do instalacji programu
+                znajdziemy w plikach README i INSTALL wewnątrz kodu źródłowego
+    $ sudo apt install git
+    $ git clone https://github.com/hishamhm/htop
+    $ cd htop
+    $ ./autogen.sh
+(dostajemy błąd o braku programu autoreconf)
+Wyszukujemy informację, który pakiet go zawiera https://packages.debian.org/index
+Instalujemy pakiet autoconf:
+ $ sudo apt install autoconf
+ $ ./autogen.sh (ponownie)
+ $ ./configure 
+(tą komendę wykonujemy kilka razy, aż zaspokoimy zależności programu powtarzając wyszukiwanie)
+
+Debian way:
+    $ sudo vim.tiny /etc/apt/sources.list 
+    (upewniamy się, że zostały odkomentowanie linie zaczynające się od deb-src)
+    $ sudo apt update
+    $ sudo apt build-dep htop
+    $ ./configure
+
+    Kompilujemy program:
+    $ make
+    Uruchomienie programu po kompilacji:
+    $ ./htop
+    Instalacja programu dla wszystkich użytkowników:
+    $ sudo make install
+
+
+Ansible
+https://docs.ansible.com/
+https://helion.pl/ksiazki/ansible-w-praktyce-automatyzacja-konfiguracji-i-proste-instalowanie-systemow-wydanie-ii-lorin-hochstein-rene-moser,ansipr.htm#format/e
+$ sudo apt install ansible
+
+uruchamianie playbooka (w katalogu, w którym się znajduje. U nas ~/ansible):
+    $ ansible-playbook base_config.yml -K
+
+$ mkdir ~/ansible
+$ cd ~/ansible
+$ vim base_config.yml
+
+---
+- name: "Podstawowa konfiguracja systemu"
+  hosts: 127.0.0.1
+  connection: local
+  become: yes
+  tasks:
+    - name: "Instalacja aptitude"
+      package:
+        name: aptitude
+        state: present
+        force_apt_get: True
+    - name: "Instalacja oprogramowania"
+      package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - vim
+        - nginx
+        - ufw
+        - mc
+        - tmux
+        - docker.io
+        - curl
+        - git
+    - name: "Konfiguracja usługi ssh"
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+      loop:
+        - regexp: '^PermitRootLogin.*$'
+          line: 'PermitRootLogin prohibit-password'
+        - regexp: '^ClientAliveInterval.*$'
+          line: 'ClientAliveInterval 300'
+        - regexp: '^ClientAliveCountMax.*$'
+          line: 'ClientAliveCountMax 3'
+        - regexp: '^UseDNS.*$'
+          line: 'UseDNS no'
+      register: sshd_result
+    - debug:
+        msg: "{{ sshd_result }}"
+    - name: "Restart serwera ssh"
+      systemd:
+        name: ssh
+        state: restarted
+      when: sshd_result is changed
+    - name: "Ustawiam firewalla ufw"
+      ufw:
+        direction: "{{ item.direction }}"
+        policy: "{{ item.policy }}"
+      loop:
+        - direction: 'incoming'
+          policy: 'deny'
+        - direction: 'outgoing'
+          policy: 'allow'
+    - name: "Ustaw reguły ufw"
+      ufw:
+        rule: "{{ item.rule }}"
+        port: "{{ item.port }}"
+        proto: "{{ item.proto }}"
+      loop:
+        - rule: 'limit'
+          port: '22'
+          proto: tcp
+        - rule: 'allow'
+          port: '80'
+          proto: tcp
+    - name: Enable ufw
+      ufw:
+        state: enabled
+    - name: "Dodanie grupy www-data"
+      group:
+        name: www-data
+        gid: 33
+        state: present
+    - name: "Utwórz użytkownika do odpalania kontenerów dockerowych"
+      user:
+        name: dockeradmin
+        groups: www-data,docker
+        append: yes
+        state: present
+    - name: "Ustawienie strefy czasowej"
+      timezone:
+        name: "Europe/Warsaw"
+    - name: "Ustaw hostname"
+      hostname:
+        name: "serwer1"
+
+
+GIT
+
+$ sudo apt install git
+
+Tworzymy repozytorium, które symuluje nam to obecne na zdalnym serwerze:
+    $ git init --bare ~/ansible.git
+    
+Wracamy do katalogu z playbookiem:
+    $ cd ~/ansible
+Inicjalizujemy go jako repozytorium git:
+    $ git init
+Dodajemy „zdalny serwer”:
+    $ git remote add origin ~/ansible.git
+Rejestrujemy nasz dotychczasowy playbook ansibla:
+    $ git add base_config.yml
+Wprowadzamy zmiany do repozytorium:
+    $ git commit 
+Przy pierwszym użyciu poprosi nas o dodanie informacji o nas do ustawień gita:
+    $ git config --global user.email "mail@mail.pl"
+    $ git config --global user.name "sirmacik"
+Ponownie wykonujemy akcję commit:
+    $ git commit
+
+Przykładowa treść commita:
+
+Dodanie playbooka podstawowej konfiguracji
+
+Playbook wykonuje akcje instalacji podstawowych pakietów, konfigu-
+racji serwera ssh o zalecane parametry, ustawienia firewalla ufw
+oraz tworzy nowego użytkownika dla Dockera, dodając go do wymaga-     
+nych grup.
+
+
+↑↑↑↑
+Pierwsza linia nie przekracza 50 znaków. Potem robimy linijkę przerwy i wprowadzamy rozszerzony opis zmian, dbając żeby nie przekraczał on 72 znaków na linię. 
+
+Zmiana po zapisaniu i zamknięciu edytora pojawi się w logu:
+    $ git log
+Wysyłamy ją na „zdalny serwer”:
+    $ git push origin master
+    
+Podgląd czym różni się obecny stan katalogu od tego, który jest już w repozytorium, bądź w zacommitowanych przez nas zmianach:
+    $ git status
+    
+Pobranie do siebie czyjegoś repozytorium:
+    $ git clone https://adres/serwera/repo.git katalog-docelowy
+Pobranie ostatnich zmian ze zdalnego serwera do naszej kopii:
+    (wewnątrz naszej kopii, np. w katalogu ~/ansible)
+    $ git pull
+    
+Powrót do ansible:    
+    $ cd ~/ansible
+    $ vim odpal_kontenery.yml
+    
+---
+- name: "Uruchom kontenery potrzebne do hostingu wordpress"
+  hosts: 127.0.0.1
+  connection: local
+  become: yes
+  tasks:
+    - name: "utwórz katalog z danymi wordpress"
+      file:
+        path: /srv/www/wordpress/wp-config
+        state: directory
+        owner: root
+        group: www-data
+        mode: g+w
+        recurse: yes
+    - name: "Instalacja pip"
+      package:
+        name: python3-pip
+        state: present
+    - name: "Instalacja modułu docker dla pythona"
+      pip:
+        name: docker
+        state: present
+    - name: "Docker uruchomiony"
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+    - name: "Uruchom kontener bazodanowy"
+      docker_container:
+        name: db
+        image: mariadb:latest
+        restart_policy: always
+        volumes:
+          - db_wp:/var/lib/mysql
+        env:
+          MYSQL_ROOT_PASSWORD: "tiriri332342"
+          MYSQL_DATABASE: wordpress
+          MYSQL_USER: adminer
+          MYSQL_PASSWORD: "ttjdj3928284mf"
+    - name: "Zatrzymaj nginx jeśli aktywny"
+      systemd:
+        name: nginx
+        state: stopped
+        enabled: no
+    - name: "Uruchom kontener wordpress"
+      docker_container:
+        name: wp
+        image: wordpress:latest
+        restart_policy: always
+        ports:
+          - "80:80"
+        volumes:
+          - /srv/www/wordpress/wp-content:/var/www/html/wp-content
+        env:
+          WORDPRESS_DB_HOST: db
+          WORDPRESS_DB_USER: adminer
+          WORDPRESS_DB_PASSWORD: "ttjdj3928284mf"
+          WORDPRESS_TABLE_PREFIX: wordek_
+
+
+Mając już część zmian wykonaną dodajemy je do repozytorium git:
+    $ git add odpal_kontenery.yml
+    $ git commit
+    
+    Treść commita:
+Wprowadzenie playbooka do kontenerów wordpress
+    
+Instaluje on wymagane moduły do obsługi dockera. Tworzy katalog do
+przechowywania danych WordPress i uruchamia kontener bazodanowy.
+
+I kontynuujemy pracę. 
+
+Po zakończeniu pracy z kolejnym playbookiem nadpiszemy sobie commit roboczy, by uzupełnić go o nowe zmiany i uczynić z niego jeden „kompletny moduł”, który wprowadzamy do repozytorium:
+    $ git add odpal_kontenery.yml
+    $ git commit --amend
+uzupełniamy poprzedni opis commita do następującej postaci:
+
+Wprowadzenie playbooka do kontenerów wordpress
+
+Instaluje on wymagane moduły do obsługi dockera. Tworzy katalog do
+przechowywania danych WordPress, uruchamia kontener bazodanowy oraz
+kontener wordpressa. Dba przy tym o wyłączenie serwera nginx.
+
+$ git push origin master
+
+
+Dodawanie użytkownika i do grupy
+
+ip
+pokazanie informacji o połączeniu
+$ ip a
+nadanie adresu ip
+$ ip a add 
+informacje o stanie interfejsów
+$ ip link
+statystyki interfejsóœ
+$ ip -s link
+zmiana stanu interfejsu
+$ ip link set up/down
+lista tras w tablicy routingu
+$ ip route
+dodaj trasę
+$ ip route add
+usuń trasę
+$ ip route del
+
+Przeglądanie logów z działania systemu
+pokaż logi systemowe i podążaj za nowymi
+$ journalctl -f 
+pokaż logi z wybranego wycinka czasu
+$ journalctl --since "20210218 13:30:00" --until "20210219 13:11:00"
+pokaż tylko błędy
+$ journalctl -p err
+pokaż logi od końca
+$ journalctl -xe 
+pokaż logi usługi sshd
+$ journalctl -u sshd
+
+
+
+Zarządzanie zadaniami:
+    Ctrl-z - zatrzymanie zadania
+    $ jobs - lista zadań zatrzymanych
+    $ fg <opcjonalnie numer zadania> - przywróć zatrzymane zadanie
+    $ bg <opcjonalnie numer zadania>  – uruchom zadanie dalej w tle
+    $ fg <opcjonalnie numer zadania>  - przywróć zadanie z tła 
+
+Cron
+$ vim ticker.sh
+
+#!/bin/sh
+echo `date` >> ~/zapis.log
+
+Edycja tablicy zadań użytkownika https://crontab.guru/
+$ crontab -e
+
+Podgląd tablicy zadań:
+    $ crontab -l
+    
+At
+
+$ sudo yum install at
+$ sudo systemctl enable --now atd
+
+$ vim ticker2.sh 
+#!/bin/sh
+echo "testówka o `date`" >> ~/at.log
+
+Zaplanowanie zadania:
+    $ at now +2 minutes
+    at> sh ticker2.sh
+    at> Ctrl-d
+    at> <EOT>
+    job 1 at Thu Feb 18 14:57:00 2021
+
+Sprawdzenie zaplanowanych zadań:
+    $ atq
+
+RHEL/CentOS8, instalacja dockera
+$ dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+$ dnf install docker-ce --nobest
+
+Jakie repozytoria możemy dodawać do RH/CentOS
+https://fedoraproject.org/wiki/EPEL
+repo dockera jeśli jest koniecznie niezbędne
+https://wiki.centos.org/AdditionalResources/Repositories/SCL
+
+https://ftp.icm.edu.pl/pub/Linux/dist/archlinux/iso/2021.02.01/archlinux-2021.02.01-x86_64.iso
+
+
+Zapisanie całego wyniku działania komendy do pliku:
+    $ echo "456" 2>&1 | tee /tmp/wynik-komendy.log
+(działa również z komendami interaktywnymi)
+
+Archlinux
+
+Sprawdzenie czy działa nam sieć:
+    ping wp.pl
+
+Synchronizacja z serwerami czasu:
+    timedatectl set-ntp true
+    timedatectl status
+
+Partycjonowanie dysku:
+    fdisk /dev/sda
+
+# Use "m" to create MBR table
+# "n" to create partitions:
+# Number  Start (sector)    End (sector)  Size       Code  Name
+#    1         1050624         1460223   512.0 MiB   8300  Linux filesystem
+#    2         1460224      1679181823   7.5 GiB     8E00  Linux LVM
+# "w" to write changes
+# "q" to quit
+
+Formatowanie partycji boot:
+    mkfs.ext2 /dev/sda1
+
+Szyfrowanie partycji systemowej:
+    cryptsetup luksFormat --type luks1 /dev/sda
+    cryptsetup open /dev/sda2 cryptboot
+
+Tworzenie wirtualnych partycji lvm:
+    pvcreate /dev/mapper/cryptlvm
+    vgcreate vg0 /dev/mapper/cryptlvm
+    lvcreate -L 1G vg0 -n swap
+    lvcreate -l 100%FREE vg0 -n root
+    mkfs.ext4 /dev/mapper/vg0-root
+    mkswap /dev/mapper/vg0-swap
+
+Zamontowanie partycji:
+    swapon /dev/mapper/vg0-swap
+    mount /dev/mapper/vg0-root /mnt
+    mkdir /mnt/boot
+    mount /dev/sda1 /mnt/boot
+
+Instalacja podstawowych pakietów systemu:
+pacstrap /mnt base base-devel grub vim git linux linux-firmware lvm2 dhcpcd
+
+Stworzenie pliku fstab dla przyszłego systemu:
+    genfstab -pU /mnt >> /mnt/etc/fstab
+    
+Wejście do środowiska chroot – przyszłego systemu:
+    arch-chroot /mnt
+    
+Ustawienie strefy czasowej:
+    ln -sf /usr/share/zoneinfo/Europe/Warsaw /etc/localtime
+    
+Ustawienie nazwy hosta:
+    echo "arch" > /etc/hostname
+
+Ustawienia językowe:
+    w pliku /etc/locale.gen należy odkomentować:
+        en_US.UTF-8 UTF-8
+        pl_PL.UTF-8 UTF-8
+    locale-gen
+    echo LANG=pl_PL.UTF-8 >> /etc/locale.conf
+
+Ustawiamy hasło roota:
+    passwd
+    
+Ustawienia obrazu initrd ładowanego podczas startu systemu:
+    vim /etc/mkinitcpio.conf
+    W linijce HOOKS przed filesystem należy wpisać:
+        encrypt lvm2 resume
+    mkinitcpio -p linux
+    
+Konfiguracja programu rozruchowego GRUB:
+    vim /etc/default/grub
+    odkomentować linijkę GRUB_ENABLE_CRYPTODISK=y
+    w linii GRUB_CMDLINE_LINUX wprowadzamy wartość:
+        cryptdevice=/dev/sda2:vg0 root=/dev/mapper/vg0-root resume=/dev/mapper/vg0-root
+    grub-install --target=i386-pc /dev/sda
+    grub-mkconfig -o /boot/grub/grub.conf
+    
+Dodanie naszego użytkownika i nadanie mu możliwości skorzystania z sudo:
+    pacman -S sudo
+    useradd -m -g users -G wheel nazwauzytkownika
+    
+    vim /etc/sudoers
+    odkomentować linijkę:
+        %wheel ALL=(ALL) ALL
+
+Uruchomić dhcpcd przy starcie systemu, żeby pobierał sam adres sieciowy z dhcp przy podłączonym kablu sieciowym:
+    systemctl enable dhcpcd@enp0s3 (nazwa interfejsu)
+    
+Ponowne uruchomienie systemu po zakończeniu instalacji:
+    exit
+    umount -R /mnt
+    swapoff -a
+    shutdown now
+    
+Odmontować obraz iso, wystartować ponownie system. Po widoku gruba powinien poprosić o hasło do otwarcia zaszyfrowanego dysku, potem pokazać możliwość zalogowania się do systemu. \o/
+
+Jeśli po instalacji coś nie działa i system nie uruchamia się, to odpalamy go jeszcze raz z płyty instalacyjnej i wykonujemy poniższe komendy, żeby znaleźć się ponownie w środowisku przyszłego systemu i dokonać napraw/poprawek:
+    cryptsetup open /dev/sda2 cryptlvm
+    mount /dev/mapper/vg0-root /mnt
+    mount /dev/sda1 /mnt/boot
+    swapon /dev/mapper/vg0-swap
+    arch-chroot /mnt
+
+Więcej informacji i przydatne instrukcje, nie tylko na archu:
+https://wiki.archlinux.org/
+
+Narzędzia do diagnostyki sieci:
+    sudo pacman -S tcpdump nmap bash-completion tmux net-tools
+    sudo apt install nmap tcpdump tmux net-tools
+
+# słuchaj na interfejsie
+tcpdump -i enp0s3
+
+# złap tylko 5 pakietów
+tcpdump -i enp0s3 -c 5
+
+# pokaż dostępne interfejsy
+tcpdump -D
+
+# zapisz wyłapane pakiety do pliku
+tcpdump -w 0001.pcap -i enp0s3
+
+# czytaj zapisane pakiety
+tcpdump -r 0001.pcap
+
+# tylko pakiety tcp
+tcpdump -i enp0s3 tcp
+
+# tylko na porcie 22
+tcpdump -i enp0s3 port 22
+
+# tylko pakiety z adresu
+tcpdump -i enp0s3 src 192.168.0.2
+
+# tylko pakiety do adresu
+tcpdump -i enp0s3 dst 50.116.66.139
+
+# znajdź adresy w podsieci
+nmap -sP 10.0.2.0/24
+
+# znajdź otwarte porty w podsieci
+nmap 10.0.2.0/24
+
+# zidentyfikuj hosta
+nmap -O 10.0.2.164
+
+# odczytaj hostname urządzeń w podsieci
+nmap -sL 10.0.2.0/24
+
+# szukaj otwartych portów hosta
+nmap -sS -sU -PN 10.0.2.164
+
+# szukaj wszystkich otwartych portów
+nmap -sS -sU -PN -p 1-65535 10.0.2.164
+
+# skanowanie agresywne
+nmap -sT 10.0.2.164
+
+# Tablica tras
+netstat -r
+
+# Statystyki interfejsu
+netstat -i
+netstat -s
+
+Podgląd aplikacji nasłuchujących na maszynie:
+    $ netstat -tulpn
+    
+Instalacja środowiska graficznego XFCE
+$ pacman -S xfce4 xorg-server
+(do pliku ~/.xinitrc wpisujemy start środowiska XFCE)
+$ vim ~/.xinitrc
+
+exec startxfce4
+
+
+Środowisko graficzne uruchamiamy komendą startx wykonaną wewnątrz maszyny wirtualnej
+$ startx
+
+Instalacja serwera RDP:
+    
+    $ git clone https://aur.archlinux.org/yay.git
+    $ cd yay
+    $ makepkg -si
+    $ yay -S xrdp
+    $ sudo systemctl enable --now xrdp
+    $ sudo systemctl enable --now xrdp-sesman
+    
+Na ubuntu:
+    sudo apt update
+    sudo apt install xrdp
+    sudo systemctl enable --now xrdp
+
+W ustawieniach maszyny otwieramy przekierowanie portu 3333 do portu 3389 naszej maszyny wirtualnej. Potem za pomocą klienta łączymy się do adresu localhost:3333
+
+
+Nieszyfrowany, szybki transfer plików z netcat
+Na serwerze odbierającym:
+  nc -l -p 1234 | tar zxf -
+
+Na serwerze wysyłającym
+  tar cv katalog | gzip --best | nc -w 3 serwer 1234
+
+
+Szyfrowany transfer z netcat
+
+Na serwerze odbierającym:
+  nc -l -p 1234 | gpg -d | tar zxf -
+
+Na serwerze wysyłającym
+  tar cv katalog | gzip --best | gpg -e -r marcin@karpezo.pl | nc -w 3 serwer 1234
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

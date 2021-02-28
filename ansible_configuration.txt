@@ -1,0 +1,175 @@
+##################################
+############ ANSIBLE #############
+##################################
+
+https://docs.ansible.com/
+https://helion.pl/ksiazki/ansible-w-praktyce-automatyzacja-konfiguracji-i-proste-instalowanie-systemow-wydanie-ii-lorin-hochstein-rene-moser,ansipr.htm#format/e
+
+
+#1. Installing Ansible:
+-- install ansible on machine:
+	$ sudo apt install ansible
+-- create working directory and cd:
+	$ mkdir ~/ansible && cd ~/ansible
+	$ vim base_config.yml
+	# and paste:
+---
+- name: "Podstawowa konfiguracja systemu"
+  hosts: 127.0.0.1
+  connection: local
+  become: yes
+  tasks:
+    - name: "Instalacja aptitude"
+      package:
+        name: aptitude
+        state: present
+        force_apt_get: True
+    - name: "Instalacja oprogramowania"
+      package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - vim
+        - nginx
+        - ufw
+        - mc
+        - tmux
+        - docker.io
+        - curl
+        - git
+    - name: "Konfiguracja usługi ssh"
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+      loop:
+        - regexp: '^PermitRootLogin.*$'
+          line: 'PermitRootLogin prohibit-password'
+        - regexp: '^ClientAliveInterval.*$'
+          line: 'ClientAliveInterval 300'
+        - regexp: '^ClientAliveCountMax.*$'
+          line: 'ClientAliveCountMax 3'
+        - regexp: '^UseDNS.*$'
+          line: 'UseDNS no'
+      register: sshd_result
+    - debug:
+        msg: "{{ sshd_result }}"
+    - name: "Restart serwera ssh"
+      systemd:
+        name: ssh
+        state: restarted
+      when: sshd_result is changed
+    - name: "Ustawiam firewalla ufw"
+      ufw:
+        direction: "{{ item.direction }}"
+        policy: "{{ item.policy }}"
+      loop:
+        - direction: 'incoming'
+          policy: 'deny'
+        - direction: 'outgoing'
+          policy: 'allow'
+    - name: "Ustaw reguły ufw"
+      ufw:
+        rule: "{{ item.rule }}"
+        port: "{{ item.port }}"
+        proto: "{{ item.proto }}"
+      loop:
+        - rule: 'limit'
+          port: '22'
+          proto: tcp
+        - rule: 'allow'
+          port: '80'
+          proto: tcp
+    - name: Enable ufw
+      ufw:
+        state: enabled
+    - name: "Dodanie grupy www-data"
+      group:
+        name: www-data
+        gid: 33
+        state: present
+    - name: "Utwórz użytkownika do odpalania kontenerów dockerowych"
+      user:
+        name: dockeradmin
+        groups: www-data,docker
+        append: yes
+        state: present
+    - name: "Ustawienie strefy czasowej"
+      timezone:
+        name: "Europe/Warsaw"
+    - name: "Ustaw hostname"
+      hostname:
+        name: "serwer1"
+-- running ansibles playbook(in directory where file exists -> ~/ansible):
+	$ ansible-playbook base_config.yml -K
+-- running containers:
+	$ vim odpal_kontenery.yml
+	# and add:
+---
+- name: "Uruchom kontenery potrzebne do hostingu wordpress"
+  hosts: 127.0.0.1
+  connection: local
+  become: yes
+  tasks:
+    - name: "utwórz katalog z danymi wordpress"
+      file:
+        path: /srv/www/wordpress/wp-config
+        state: directory
+        owner: root
+        group: www-data
+        mode: g+w
+        recurse: yes
+    - name: "Instalacja pip"
+      package:
+        name: python3-pip
+        state: present
+    - name: "Instalacja modułu docker dla pythona"
+      pip:
+        name: docker
+        state: present
+    - name: "Docker uruchomiony"
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+    - name: "Uruchom kontener bazodanowy"
+      docker_container:
+        name: db
+        image: mariadb:latest
+        volumes:
+          - db_wp:/var/lib/mysql
+        env:
+          MYSQL_ROOT_PASSWORD: "tiriri332342"
+          MYSQL_DATABASE: wordpress
+          MYSQL_USER: adminer
+          MYSQL_PASSWORD: "ttjdj3928284mf"
+    - name: "Zatrzymaj nginx jeśli aktywny"
+      systemd:
+        name: nginx
+        state: stopped
+        enabled: no
+    - name: "Uruchom kontener wordpress"
+      docker_container:
+        name: wp
+        image: wordpress:latest
+        ports:
+          - "80:80"
+        volumes:
+          - /srv/www/wordpress/wp-content:/var/www/html/wp-content
+        env:
+          WORDPRESS_DB_HOST: db
+          WORDPRESS_DB_USER: adminer
+          WORDPRESS_DB_PASSWORD: "ttjdj3928284mf"
+          WORDPRESS_TABLE_PREFIX: wordek_
+		  
+	# and execute:
+		$ ansible-playbook odpal_kontenery.yml -K
+		
+		
+		
+##################################
+########## ANNOTATIONS ###########
+##################################	
+1) Orchestration 
+In system administration, orchestration is the automated configuration, coordination, and management of computer systems and software
+A number of tools exist for automation of server configuration and management, including Ansible, Puppet, Salt, Terraform and AWS CloudFormation.

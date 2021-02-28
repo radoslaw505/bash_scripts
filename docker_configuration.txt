@@ -1,0 +1,188 @@
+##################################
+## INSTALLING DOCKER ON CENTOS7 ##
+##################################
+
+#0. Installing docker:
+	$ sudo yum install docker
+
+#1. Configuration of firewallD:
+- add docker to trusted
+	$ sudo firewall-cmd --zone=trusted --change-interface=docker0 --permanent
+- add masquerade (look for annotation 1 bellow)
+	$ sudo firewall-cmd --zone=trusted --add-masquerade --permanent
+- reload firewall config
+	$ sudo firewall-cmd --reload
+	
+#2. Configuration iptables:
+- disable firewallD:
+	$ sudo systemctl disable --now firewalld
+- install package:
+	$ sudo yum install iptables-services
+- clear iptables configuration:
+	$ sudo iptables -F
+- block all incomming and forwarding connections:
+	$ sudo iptables -P INPUT DROP
+	$ sudo iptables -P FORWARD DROP
+
+* CONNECTION IS BLOCKED SO WE NEED TO LOG ON MACHINNE WITH ROOT ACCOUNT
+	
+#3. Log on machine with root account:
+- allow outgoing connections:
+	$ sudo iptables -P OUTPUT ACCEPT
+- opening traffic on the loop(LO) interface - The general concept of loopback is a mechanism through which a message or signal ends up (or loops) back to where it started.:
+    $ sudo iptables -A INPUT -i lo -j ACCEPT
+- allow responses in calls that we have initiated:
+	$ sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+- check existing rules:
+    $ sudo iptables -L INPUT -v -n --line-numbers
+- opening port 22 - for ssh connection:
+    $ sudo iptables -I INPUT 3 -i enp0s3 -p tcp --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT
+- opening port 80:
+    $ sudo iptables -I INPUT 4 -i enp0s3 -p tcp --dport 80 -m state --state NEW,ESTABLISHED -j ACCEPT
+- save configuration:
+	$ sudo -s
+    # iptables-save > /etc/sysconfig/iptables
+	
+* CONNECTION IS OPEN FOR SSH CONNECTION - we continue with putty
+
+#4. Running iptables after system restart:
+	$ sudo systemctl enable --now iptables
+- preview of the active iptables configuration:
+	$ sudo iptables -L
+
+#5. Restart docker and mount new swap disk:
+- restart docker
+	$ sudo systemctl restart docker
+	# $ sudo iptables -L # there should be new entries for docker
+- creating a swap file in a linux system:
+    $ sudo fallocate -l 4G /swapfile
+	# $ free -h # 
+    $ sudo chmod 600 /swapfile
+    $ sudo mkswap /swapfile
+    $ sudo swapon /swapfile
+	# $ free -h
+- edit the /etc/fstab file so that our swapfile is included with the system every time:
+    $ sudo vim /etc/fstab
+- at the end of the file we add a line with the following content:
+    /swapfile       none    swap    sw      0       0
+*- unmount /swapfile (if some problems occured)
+	sudo swapoff /swapfile
+- modification of system parameters (how willingly the system will swap data):
+    $ sudo sysctl vm.swappiness=10
+    $ sudo sysctl vm.vfs_cache_pressure=50
+- we make these settings permanent by placing them in the /etc/sysctl.conf file:
+	$ sudo vim /etc/sysctl.conf
+	# and add lines:
+		vm.swappiness=10
+		vm.vfs_cache_pressure=50
+	
+#*6. VIM - Set up vim to work with YAML files in ~/.vimrc:
+	$ sudo vim ~/.vimrc
+	# and add:
+
+		set nocompatible
+		filetype plugin indent on
+		syntax on
+
+		set autoindent
+		set expandtab
+		set softtabstop=4
+		set shiftwidth=4
+
+		set encoding=utf-8
+		set fileencoding=utf-8
+		set tw=80
+		set mouse=a
+
+		set ignorecase
+		set smartcase
+		set incsearch
+		set showmatch
+		set hlsearch
+
+		autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
+		autocmd BufNewFile,BufRead *.yaml, *.yml set filetype=yaml
+
+#7. Docker configuration:
+	$ vim ~/docker-compose.yml # or sudo vim ~/docker-compose.yml
+	# and add:
+	
+---
+version: '2'
+services:
+  db:
+    image: mariadb:latest
+    volumes:
+      - db_wp:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "tiriri332342"
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: adminer
+      MYSQL_PASSWORD: "ttjdj3928284mf"
+  wp:
+    image: wordpress:latest
+    ports:
+      - "80:80"
+    restart: always
+    working_dir: /var/www/html
+    volumes:
+      - ./wordpress/wp-content:/var/www/html/wp-content
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: adminer
+      WORDPRESS_DB_PASSWORD: "ttjdj3928284mf"
+      WORDPRESS_TABLE_PREFIX: wordek_
+
+volumes:
+  db_wp: {}
+
+- install docker-compose:
+	# $ sudo yum install python3-pip
+	# $ sudo pip3 install --upgrade pip
+	$ sudo pip3 install docker-compose
+- *adding the missing path, where our environment is to look for programs to run in the bash configuration file:
+	$ echo "export PATH=\"/usr/local/bin:$PATH\"" >> .bashrc
+- *load bashrc file:
+	$ . .bashrc
+- create directory for wordpressa data: 
+    $ mkdir -p wordpress/wp-content
+
+#8. Run docker compose and setup containers:
+	$ sudo /usr/local/bin/docker-compose up
+- stop docker -> ctrl + C
+- start docker containers again in background:
+	$ sudo /usr/local/bin/docker-compose up -d
+- stop docker containers:
+	$ sudo /usr/local/bin/docker-compose stop
+	$ sudo /usr/local/bin/docker-compose kill
+- list all running containers:
+	$ sudo docker container ls
+- list docker volumes:
+	$ sudo docker volume ls
+	
+	
+	
+#######################################
+## INSTALLING DOCKER ON RHEL/CENTOS8 ##
+#######################################
+
+-- add repo:
+	$ dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+-- install:
+	$ dnf install docker-ce --nobest
+
+-- What repositories can we add to RH / CentOS
+	https://fedoraproject.org/wiki/EPEL
+-- Docker repo if absolutely necessary
+	https://wiki.centos.org/AdditionalResources/Repositories/SCL
+
+	
+	
+##################################
+########## ANNOTATIONS ###########
+##################################	
+
+1) What is IP Masquerade?
+IP Masquerade is a networking function in Linux similar to the one-to-many (1:Many) NAT (Network Address Translation) servers found in many commercial firewalls and network routers. For example, if a Linux host is connected to the Internet via PPP, Ethernet, etc., the IP Masquerade feature allows other "internal" computers connected to this Linux box (via PPP, Ethernet, etc.) to also reach the Internet as well. Linux IP Masquerading allows for this functionality even though these internal machines don't have an officially assigned IP address.
+MASQ allows a set of machines to invisibly access the Internet via the MASQ gateway. To other machines on the Internet, the outgoing traffic will appear to be from the IP MASQ Linux server itself. In addition to the added functionality, IP Masquerade provides the foundation to create a HEAVILY secured networking environment. With a well built firewall, breaking the security of a well configured masquerading system and internal LAN should be considerably difficult to accomplish.

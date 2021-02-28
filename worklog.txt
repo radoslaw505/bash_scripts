@@ -1,0 +1,494 @@
+# CentOS7
+-- Instalacja dodatkowych pakietów
+	$ sudo yum install vim git yum-cron
+
+-- Aktualizacja systemu
+	$ sudo yum update
+
+-- Konfiguracja automatycznych aktualizacji bezpieczeństwa
+	$ sudo vim /etc/yum/yum-cron.conf 
+
+	-- ustawiamy następujące linijki
+		update_cmd = security
+		apply_updates = yes
+		emit_via = email
+
+	Następnie (startowanie usług w systemie):
+		$ systemctl start yum-cron
+		$ systemctl enable yum-cron
+	lub:
+		$ systemctl enable --now yum-cron
+
+	Wyłączanie usług w systemie:
+		$ systectl stop yum-cron
+		$ systemctl disable yum-cron
+	lub:
+		$ systemctl disable --now yum-cron    
+
+-- Metody restartowania usług:
+    # systemctl reload usługa (przeładowanie bez ubijania działajacego daemona, pozostawi działającą konfigurację jeśli w nowej wystąpią błędy)
+    # systemctl restart usługa (ubija daemona i startuje nowego nawet jeśli zawiera błędy)
+
+-- Sprawdzenie statusu usługi:
+    $ systemctl status usługa
+
+
+# Konfiguracja firewalla w cenos7/8
+	$ sudo yum install firewalld
+	$ sudo systemctl enable --now firewalld
+	$ sudo firewall-cmd --state
+
+-- Wypisz wszystkie strefy i ich właściwości:
+	$ sudo firewall-cmd --list-all-zones | less
+
+-- Zmiana strefy dla wybranego interfejsu (po restarcie zostanie ponownie ustawiona domyślna)
+	$ sudo firewall-cmd --zone=home --change-interface=enp0s3
+
+-- Zmiana domyślnej strefy, do której przypisywane są nowe interfejsy sieciowe
+	$ sudo firewall-cmd --set-default-zone=drop
+
+
+-- Zmiana na stałe strefy dla interfejsu:
+	$ sudo firewall-cmd --zone=public --change-interface=enp0s3 --permanent
+
+-- Pobieranie informacji o interfejsach sieciowych dostępnych w systemie:
+	$ ip a
+
+-- Sprawdzenie aktywnych stref i przypisanych do nich interfejsów
+	$ sudo firewall-cmd --get-active-zones
+
+-- Sprawdzenie listy usług obsługiwanych przez fireewald (nie musimy wtedy definiować ich za pomocą portu/protokołu)
+	$ firewall-cmd --get-services
+
+-- Otwarcie portu http
+	$ sudo firewall-cmd --zone=public --add-service=http
+
+-- Zapisanie zmiany pomiędzy restartami
+	$ sudo firewall-cmd --zone=public --add-service=http --permanent
+
+-- Otwarcie portu 5000 po protokole tcp:
+	$ sudo firewall-cmd --zone=public --add-port=5000/tcp
+    
+-- Otwarcie przedziału portów:
+	$ sudo firewall-cmd --zone=public --add-port=4990-4999/udp
+
+-- Instalowanie pakietu z narzędziami sieciowymi:
+    $ sudo yum install net-tools
+    
+-- Sprawdzenie aktywnych usług i portów, na których nasłuchują:
+    $ sudo netstat -tulpn
+    
+
+# Tmux
+	$ sudo yum install tmux
+
+-- Pierwsze uruchomienie tmux:
+    $ tmux
+
+	Przydatne skróty:
+	Tworzenie nowej sesji: Ctrl-b c
+	   Przełączanie między sesjami: C-b [cyfra z dolnego paska]
+	   Lista sesji: C-b w
+	   Wyjście z sesji, tak żebyśmy mogli do niej później wrócić: Ctrl-b d
+	   Zamknięcie sesji (jednej z kilku): Ctrl-b x
+	   Przejście do trybu kopiowania (scroll lock): C-b [ 
+		   Opuszczenie ↑ trybu: Esc
+	   Wyświetlenie pomocy: C-b ?
+
+-- Powrót do odłączonej sesji (jeśli jest jedna):
+    $ tmux attach
+-- Lista uruchomionych sesji:
+    $ tmux list-sessions
+    
+-- Powrót do sesji o wybranym numerze:
+    $ tmux attach -t [numer sesji lub nazwa]
+-- Utworzenie nowej sesji o wskazanej przez nas nazwie:
+    $ tmux new -A -s [nazwa_sesji]
+-- To samo polecenie wykorzystamy do powrotu do tejże sesji. Oznacza ono: Tmux, stwórz mi nową sesję o nazwie [nazwa_sesji] lub przywróć mi już istniejącą.
+    
+-- Wyświetlenie loga z działania jądra systemu linux:
+	$ sudo dmesg | less
+
+
+# Utworzenie archiwum tar:
+    $ tar cv archiwum > arch.tar
+-- tar.gz:
+    $ tar cv archiwum | gzip --best > arch.tar.gz
+-- tar.bz:
+    $ tar cfvj arch.tar.bz2 archiwum/
+-- tar.xz:
+    $ tar cJf arch.tar.xz archiwum/
+-- tar.lz:
+    $ tar cv ~/archiwum | lzip -c -f - > arch2.tar.lz
+  -- (rozpakowywanie archiwum tar.lz)
+    $ tar xf arch2.tar.lz
+  -- lub by wykonać akcję kompresji wielowątkowo:
+    $ tar cv ~/archiwum > archiwum.tar
+    $ plzip -c -f archiwum.tar > archiwum.tar.lz
+  -- (rozpakowywanie wielowątkowe):
+	$ plzip -d archiwum.tar.lz
+-- tar.zst:
+    $ tar cv ~/archiwum | zstd -c -z -q - > arch.tar.zst
+  (rozpakowywanie archiwum)
+    $ tar -I zstd -xvf archiwum.tar.zst
+-- tar.7z:
+  --(pakiet p7zip-full)
+    $ tar cv katalog_z_danymi | 7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on -si archiwum.tar.7z
+  --(rozpakowanie archiwum 7z)
+    $ tar -I 7za -xvf archiwum.tar.7z
+-- .zip:
+    $ zip -r arch.zip katalog_do_spakowania/
+  --(rozpakowanie)
+    $ unzip arch.zip
+-- .rar, rozpakowanie archiwum:
+    $ unrar arch.rar
+	
+-- Rozpakowywanie pozostałych archiwów tar:
+    $ tar xf archiwum.tar.{gz,bz,lz}
+	
+-- Uruchomienie zadania z najmniejszym priorytetem, by pozwolić na normalną realizację pozostałych zadań serwera:
+    $ nice -19 plzip -c -f archiwum.tar > archiwum.tar.lz
+
+### https://sirmacik.net/optymalne-metody-kompresji-archiwow/
+
+
+# BACKUP'y
+# Synchronizacja danych (backupowanie również) z rsync
+-- instalacja pakietu:
+	$ sudo apt install rsync
+	
+-- Rsync, często wykonywane komendy:
+    $ rsync -azP (-z oznacza włączenie kompresji w locie)
+    $ rsync -avP (-v wyświetlenie szczegółów działania, -P wyświetlenie postępu procesu)
+	# example: rsync -azP archiwum/ /home/radoslaw/
+	
+-- Rsync, utworzenie pełnej kopii zapasowej naszego dysku:
+     $ rsync -avAXHS --progress --exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*","/lost+found"} / /sciezka/do/katalogu/docelowego
+	 
+-- Szybkie kopiowanie dużych ilości danych po ssh:
+    $ rsync -aHAXxv --numeric-ids --progress -e "ssh -T -o Compression=no -x" /mnt/upload/files/ admin@10.26.41.14:/upload/files/
+	# wylaczenie kompresji / uruchomienie w prostym terminalu (na normalnym tracimy ok. 60% możliwości)
+
+
+# Kompilacja oprogramowania w debianie:
+	$ sudo apt install git
+	$ git clone https://github.com/hishamhm/htop
+    $ cd htop
+	$ ./autogen.sh
+	(dostajemy błąd o braku programu autoreconf)
+  Wyszukujemy informację, który pakiet go zawiera https://packages.debian.org/index
+  Instalujemy pakiet autoconf:
+	$ sudo apt install autoconf
+	$ ./autogen.sh (ponownie)
+	$ ./configure 
+	(tą komendę wykonujemy kilka razy, aż zaspokoimy zależności programu powtarzając wyszukiwanie)
+		
+-- Debian way:
+    $ sudo vim.tiny /etc/apt/sources.list
+	(upewniamy się, że zostały odkomentowanie linie zaczynające się od deb-src)
+	$ sudo apt update
+	$ sudo apt build-dep htop
+	$ ./configure 
+	
+-- Kompilujemy program:
+    $ make
+-- Uruchomienie programu po kompilacji:
+    $ ./htop
+-- Instalacja programu dla wszystkich użytkowników:
+	$ sudo make install
+
+
+# VIM
+-- https://sirmacik.net/wp-content/uploads/downloads/vim.pdf ← Książka o vimie
+-- Przystosowanie vima do pracy z plikami YAML w pliku ~/.vimrc:
+
+set nocompatible
+filetype plugin indent on
+syntax on
+
+set autoindent
+set expandtab
+set softtabstop=4
+set shiftwidth=4
+
+set encoding=utf-8
+set fileencoding=utf-8
+set tw=80
+set mouse=a
+
+set ignorecase
+set smartcase
+set incsearch
+set showmatch
+set hlsearch
+
+autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
+autocmd BufNewFile,BufRead *.yaml, *.yml set filetype=yaml
+
+Komentowanie sekcji w VIM:
+    - Ctrl-v, żeby zaznaczyć linijki, które chcemy zakomentować
+    - Shift-i żeby wejść do trybu wprowadzania
+    - dokonujemy zmianę w jednej z linii
+    - Escape, po chwili wprowadza dla wszystkich uprzednio zaznaczonych
+	
+	
+# GIT
+$ sudo apt install git
+
+Tworzymy repozytorium, które symuluje nam to obecne na zdalnym serwerze:
+    $ git init --bare ~/ansible.git
+    
+Wracamy do katalogu z playbookiem:
+    $ cd ~/ansible
+Inicjalizujemy go jako repozytorium git:
+    $ git init
+Dodajemy „zdalny serwer”:
+    $ git remote add origin ~/ansible.git
+Rejestrujemy nasz dotychczasowy playbook ansibla:
+    $ git add base_config.yml
+Wprowadzamy zmiany do repozytorium:
+    $ git commit 
+Przy pierwszym użyciu poprosi nas o dodanie informacji o nas do ustawień gita:
+    $ git config --global user.email "mail@mail.pl"
+    $ git config --global user.name "radoslaw"
+Ponownie wykonujemy akcję commit:
+    $ git commit
+	
+Przykładowa treść commita:
+
+Dodanie playbooka podstawowej konfiguracji
+
+Playbook wykonuje akcje instalacji podstawowych pakietów, konfigu-
+racji serwera ssh o zalecane parametry, ustawienia firewalla ufw
+oraz tworzy nowego użytkownika dla Dockera, dodając go do wymaga-     
+nych grup.
+
+
+↑↑↑↑
+Pierwsza linia nie przekracza 50 znaków. Potem robimy linijkę przerwy i wprowadzamy rozszerzony opis zmian, dbając żeby nie przekraczał on 72 znaków na linię. 
+
+Zmiana po zapisaniu i zamknięciu edytora pojawi się w logu:
+    $ git log
+Wysyłamy ją na „zdalny serwer”:
+    $ git push origin master
+    
+Podgląd czym różni się obecny stan katalogu od tego, który jest już w repozytorium, bądź w zacommitowanych przez nas zmianach:
+    $ git status
+    
+Pobranie do siebie czyjegoś repozytorium:
+    $ git clone https://adres/serwera/repo.git katalog-docelowy
+Pobranie ostatnich zmian ze zdalnego serwera do naszej kopii:
+    (wewnątrz naszej kopii, np. w katalogu ~/ansible)
+    $ git pull
+	
+Po zakończeniu pracy z kolejnym playbookiem nadpiszemy sobie commit roboczy, by uzupełnić go o nowe zmiany i uczynić z niego jeden „kompletny moduł”, który wprowadzamy do repozytorium:
+    $ git add odpal_kontenery.yml
+    $ git commit --amend
+	
+
+# Wylaczanie maszyny:
+	$ sudo systemctl poweroff
+
+
+# USTAWIANIE HOSTA
+	$ hostnamectl # sprawdzenie ustawień
+	$ hostnamectl set-hostname centek # zmiana nazwy hosta (zmieni sie po przelogowaniu)
+	
+	
+# USTAWIENIE STREFY CZASOWEJ
+	$ timedatectl # sprawdzenie ustawień
+	$ timedatectl set-timezone "Europe/Warsaw" # zmiana strefy czasowej na "Europe/Warsaw"
+	$ timedatectl set-ntp true # synchronizacja ustawień z serwerami ntp
+	
+	
+# USTAWIENIA SIECIOWE
+	$ ip a 					# pokazanie informacji o połączeniu / ip a show
+	$ ip a show 			# 
+	$ ip a show dev enp0s3	#
+	$ ip link				# wylistowanie interfejsów sieciowych
+	$ ip -s link			# wylistowanie interfejsów sieciowych ze statystykami
+	$ ip link set enp0s3 down # wyłączenie interfejsu
+	$ ip link set enp0s3 up # włączenie interfejsu
+	$ ip route				#
+	$ ip route add			#
+	$ ip route del			#
+	
+	ip
+	pokazanie informacji o połączeniu
+	$ ip a
+	nadanie adresu ip
+	$ ip a add 
+	informacje o stanie interfejsów
+	$ ip link
+	statystyki interfejsóœ
+	$ ip -s link
+	zmiana stanu interfejsu
+	$ ip link set up/down
+	lista tras w tablicy routingu
+	$ ip route
+	dodaj trasę
+	$ ip route add
+	usuń trasę
+	$ ip route del
+	
+# SYSTEMCTL
+	$ systemctl status			# aktywne usługi
+	$ systemctl status sshd		# log usługi sshd
+	
+	
+# JOURNALCTL - 
+	$ journalctl		# log systemu od początku działania
+	$ journalctl -xe	# log systemu - ostatnie linie
+	$ journalctl -f		# log systemu najnowszy, odświeżany
+	$ joutnalctl --since "2021-02-18 13:58:00" --until "2021-02-18 14:00:00" # log od do
+	$ journalctl -p err	# log tylko z errorami
+	$ journalctl -u sshd # log dla wskazanej uslugi / -u -> co ma szukać
+	
+	
+# Zarządzanie zadaniami:
+    Ctrl-z - zatrzymanie zadania
+    $ jobs - lista zadań zatrzymanych
+    $ fg <opcjonalnie numer zadania> - przywróć zatrzymane zadanie
+    $ bg <opcjonalnie numer zadania>  – uruchom zadanie dalej w tle
+    $ fg <opcjonalnie numer zadania>  - przywróć zadanie z tła 
+	
+
+# CRONTAB
+Edycja tablicy zadań użytkownika https://crontab.guru/
+	$ crontab -e
+	
+Podgląd tablicy zadań:
+    $ crontab -l
+    
+# AT
+	$ sudo yum install at
+	$ sudo systemctl atd
+	$ sudo systemctl enable --now atd
+
+Zaplanowanie zadania:
+    $ at now +2 minutes
+    at> sh ticker2.sh
+    at> Ctrl-d
+    at> <EOT>
+    job 1 at Thu Feb 18 14:57:00 2021
+
+Sprawdzenie zaplanowanych zadań:
+    $ atq
+
+Zapisanie całego wyniku działania komendy do pliku:
+    $ echo "456" 2>&1 | tee /tmp/wynik-komendy.log
+(działa również z komendami interaktywnymi)
+
+
+# DODAWANIE DNS'a DO SYSTEMU
+	$ vim /etc/resolv.conf
+	i dodać np.:
+	  nameserver 8.8.8.8
+	  
+	 
+# TCPDUMP && NETSTAT && NMAP
+	# słuchaj na interfejsie
+	$ tcpdump -i enp0s3
+
+	# złap tylko 5 pakietów
+	$ tcpdump -i enp0s3 -c 5
+
+	# pokaż dostępne interfejsy
+	$ tcpdump -D
+
+	# zapisz wyłapane pakiety do pliku
+	$ tcpdump -w 0001.pcap -i enp0s3
+
+	# czytaj zapisane pakiety
+	$ tcpdump -r 0001.pcap
+
+	# tylko pakiety tcp
+	$ tcpdump -i enp0s3 tcp
+
+	# tylko na porcie 22
+	$ tcpdump -i enp0s3 port 22
+
+	# tylko pakiety z adresu
+	$ tcpdump -i enp0s3 src 192.168.0.2
+
+	# tylko pakiety do adresu
+	$ tcpdump -i enp0s3 dst 50.116.66.139
+
+
+	# znajdź adresy w podsieci
+	$ nmap -sP 10.0.2.0/24
+
+	# znajdź otwarte porty w podsieci
+	$ nmap 10.0.2.0/24
+
+	# zidentyfikuj hosta
+	$ nmap -O 10.0.2.164
+
+	# odczytaj hostname urządzeń w podsieci
+	$ nmap -sL 10.0.2.0/24
+
+	# szukaj otwartych portów hosta
+	$ nmap -sS -sU -PN 10.0.2.164
+
+	# szukaj wszystkich otwartych portów
+	$ nmap -sS -sU -PN -p 1-65535 10.0.2.164
+
+	# skanowanie agresywne
+	$ nmap -sT 10.0.2.164
+
+
+	# Tablica tras
+	$ netstat -r
+
+	# Statystyki interfejsu
+	$ netstat -i
+	$ netstat -s
+
+	Podgląd aplikacji nasłuchujących na maszynie:
+    $ netstat -tulpn
+    
+	
+# INSTALACJA SRODOWISK GRAFICZNYCH
+	
+Instalacja środowiska graficznego XFCE
+	$ pacman -S xfce4 xorg-server
+	(do pliku ~/.xinitrc wpisujemy start środowiska XFCE)
+	$ vim ~/.xinitrc # lub echo "exec startxfce4" > ~/.xinitrc
+	# i dodajemy wpis:
+		exec startxfce4
+	
+Środowisko graficzne uruchamiamy komendą startx wykonaną wewnątrz maszyny wirtualnej
+	$ startx
+
+
+Instalacja serwera RDP:
+    $ git clone https://aur.archlinux.org/yay.git
+    $ cd yay
+    $ makepkg -si
+    $ yay -S xrdp # enter -> enter -> n -> *hasło -> T
+	$ sudo systemctl enable --now xrdp
+
+Łączymy się przez Pulpit Zdalny -> host wpisujemy -> localhost	
+	
+	
+Na ubuntu:
+sudo apt update
+sudo apt install xrdp
+sudo systemctl enable --now xrdp
+
+
+Nieszyfrowany, szybki transfer plików z netcat
+Na serwerze odbierającym:
+  nc -l -p 1234 | tar zxf -
+
+Na serwerze wysyłającym
+  tar cv katalog | gzip --best | nc -w 3 serwer 1234
+
+
+Szyfrowany transfer z netcat
+
+Na serwerze odbierającym:
+  nc -l -p 1234 | gpg -d | tar zxf -
+
+Na serwerze wysyłającym
+  tar cv katalog | gzip --best | gpg -e -r marcin@karpezo.pl | nc -w 3 serwer 1234

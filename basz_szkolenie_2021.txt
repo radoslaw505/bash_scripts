@@ -1,0 +1,297 @@
+1. Hello Bash Scripting
+
+	- *rozszerzenia plików nie mają znaczenia
+	
+	- pierwsza linia w skrypcie to tzw, shebang - sekwencja znaków umieszczana na początku skryptu, a rozpoczynająca się kratką i wykrzyknikiem. Stosowana jest w Uniksie i systemach uniksopodobnych. Tekst następujący po wykrzykniku, aż do pierwszej spacji, to ścieżka do interpretera, który ma zostać użyty w celu wykonania skryptu, na przykład [https://pl.wikipedia.org/wiki/Shebang]:
+		#!/usr/bin/bash
+		
+	- dodanie uprawnień do pliku (stworzenie pliku wykonywalnego, umożliwia bezpośrednie odwołanie do skryptu) - aby skrypt był wykonywalny należy dodać mu uprawnienia do wykonywania(execute). Można to zrobić na 2 sposoby:
+		$ chmod +x script.sh
+		# lub
+		$ chmod 775 script.sh
+		# gdzie:
+		#	r(4) - read
+		#	w(2) - write
+		#	e(1) - execute
+
+	- *bez dodania uprawineń nadal możemu uruchomić(pośrednio) skrypt, w tym przypadku należy podać interpretator, np:
+		$ bash script.sh
+		
+	- Uruchomienie skryptu:
+		$ ./script.sh
+
+2. Streams
+
+	> <file_name>	-> redirect to file, overwriting pointed file
+		$ echo "666" > file.txt
+	>> <file_name>	-> redirect to file, appending pointed file
+		$ echo "666" >> file.txt
+
+	Clearing file:
+	:> <file_name>	-> redirects nothing to file, (use instead of -> echo > <file_name>, becouce it writing data to file!)
+
+
+	0 - stdin  -> standard in -> user input
+	1 - stdout -> standard out -> command output, default to terminal
+	2 - stderr -> standard error -> error, standard error is redirected by default to terminal
+
+	Streams can be redirected using 'n>' operator, where 'n' is file descriptor(1,2) number.
+	When n is ommited, it defaults to 1.
+
+		$ command >  file --> redirect the command output (stdout) to the file
+		$ command 1> file --> redirect the command output (stdout) to the file
+		$ command 2> file --> redirect the standard error (stderr) to the file
+
+		$ command 2> error.txt 1> output.txt --> redirect the standard error (stderr) to the error.txt and command output (stdout) to the output.txt
+		$ command 2> /dev/null --> suppress the error (or stdout) messages from being displayed on the screen, redirect stderr to /dev/null (virtual trash)
+
+		$ command > file 2>&1 --> redirect stderr to stdout and have error messages sent to the same file as standard output
+								# The order of redirection is important. For example, the following example redirects only stdout to file. 
+								# $ command 2>&1 > file 
+								# This happens because the stderr is redirected to stdout before the stdout was redirected to file.
+		$ command &> file     --> another way to redirect stderr to stdout is to use the &> construct. In Bash &> has the same meaning as 2>&1
+		
+		
+	tee command:
+	Exammple:
+		$ echo "456" 2>&1 | tee file.err 		-> overwriting file
+		$ echo "456" 2>&1 | tee -a file.err 	-> option -a (append), appending file
+		|& tee -a file.log -> redirect only error
+
+3. Conditional Statements
+
+	If statement:
+	
+		#1 - tylko jesli warunek zostanie spelniony
+		count=10
+		if [ $count -eq 10 ]
+		then
+			echo "PRAWDA"
+		fi
+		
+		#2 - jesli warunek zostanie spelniony - PRAWDA, jesli nie - FAŁSZ
+		count=11
+		if [ $count -eq 10 ]
+		then
+			echo "PRAWDA"
+		 else
+			echo "FAŁSZ"
+		fi
+		
+		#3 - inny zapis
+		count=10
+		if (( $count > 9 ))
+		then
+			echo "PRAWDA"
+		 else
+			echo "FAŁSZ"
+		fi
+	
+	
+	If-else if statements:
+		#1 - dwa warunki
+		count=10
+		if (( $count > 9 ))
+		 then
+			echo "Pierwszy warunek został spełniony"
+		 elif (( $count <= 9 ))
+		 then
+			echo "Drugi warunek został spełniony"
+		 else
+			echo "Warunek jest błędny"
+		fi
+	
+	
+	AND operator:
+	
+		Operator AND -> &&
+	
+		#1 - [] && []
+		wiek=10
+		if [ "$wiek" -gt 18 ] && [ "$wiek" -lt 40 ]
+		then
+			echo "Wiek jest prawidłowy"
+		else
+			echo "Wiek jest NIEPRAWIDŁOWY"
+		fi
+	
+		#2 - [[ && ]]
+		wiek=30
+		if [[ "$wiek" -gt 18 && "$wiek" -lt 40 ]]
+		then
+			echo "Wiek jest prawidłowy"
+		else
+			echo "Wiek jest NIEPRAWIDŁOWY"
+		fi
+		
+		#3 - opcja '-a' działa tak samo jak operator &&
+		wiek=30
+		if [ "$wiek" -gt 18 -a "$wiek" -lt 40 ]
+		then
+			echo "Wiek jest prawidłowy"
+		else
+			echo "Wiek jest NIEPRAWIDŁOWY"
+		fi
+	
+	OR operator:
+	
+		Operator OR -> ||
+		
+		#1 - [] || []
+		wiek=30
+		if [ "$wiek" -lt 18 ] || [ "$wiek" -gt 40 ]
+		then
+			echo "Wiek jest prawidłowy"
+		else
+			echo "Wiek jest NIEPRAWIDŁOWY"
+		fi
+		
+		#2 - [[ || ]]
+		wiek=30
+		if [[ "$wiek" -lt 18 || "$wiek" -gt 40 ]]
+		then
+			echo "Wiek jest prawidłowy"
+		else
+			echo "Wiek jest NIEPRAWIDŁOWY"
+		fi
+		
+		#3 - opcja '-o' działa tak samo jak operator ||
+		wiek=30
+		if [ "$wiek" -lt 18 -o "$wiek" -lt 40 ]
+		then
+			echo "Wiek jest prawidłowy"
+		else
+			echo "Wiek jest NIEPRAWIDŁOWY"
+		fi
+		
+		
+	SKRÓCONE ZAPISY:
+	Znając operatory AND i OR istnieje możliwość zapisania warunków w skróconej formie, tzw. w jednej linii:
+		- Jeśli warunek zostanie sprałniony to wykonaj komendę po operatorze AND
+		- Jeśli warunek nie zostanie spełniony to wykonaj wszystko po operatorze OR
+		- Istnieje możliwość łączenia tych operatorów (ale nie przesadzajmy - najlepsze rozwiązanie to rozwiązanie typu if/else)
+		
+	Przykłady:
+		#1 Warunek został spełniony i została wykonana komenda następująca po operatorze AND
+		$ [ 10 -eq 10 ] && echo "Warunek został spełniony"
+			# można to przeczytać jako: jeśli warunek 10 == 10 zostanie spełniony to wykonaj komendę echo
+			# w przypadku kiedy warunek nie zostanie spełniony nic się nie wykona, np. $ [ 1 -eq 10 ] && echo "Warunek został spełniony"
+			
+		#2 Warunek nie został spełniony i została wykonana komenda następująca po operatorze OR
+		$ [ 1 -eq 10 ] || echo "Warunek NIE został spełniony"
+			# można to przeczytać jako: jeśli warunek 1 == 10 nie zostanie spełniony to wykonaj komendę echo
+			# w przypadku kiedy warunek zostanie spełniony nic się nie wykona, np. $ [ 10 -eq 10 ] || echo "Warunek został spełniony"
+			
+		# Jeśli warunek został spełniony wykonaj komendę następującą po operatorze AND, jeśli nie został wykonaj komendę po operatorze OR
+		$ [ 10 -eq 10 ] && echo "Warunek został spełniony" || echo "Warunek NIE został spełniony"
+		> Warunek został spełniony
+			# Warunek został spełniony, dlatego wykonała się jedynie komenda po operatorze &&, jeśli ona nie została by wykonana, wykonała by się komenda po operatorze ||
+		
+		$ [ 11 -eq 10 ] && echo "Warunek został spełniony" || echo "Warunek NIE został spełniony"
+		> Warunek NIE został spełniony
+			# Warunek nie został spełniony przez co nie wykonała się komenda po operatorze &&, a co za tym idzie wykonała się operacja po operatorze ||
+		
+5. Loops
+
+	continue -> ignoresloop iteration and start another
+	break    -> breaks (leaves) loop
+
+	1. For loop:
+
+		words="A B C D E"
+		for word in $words; do
+			# code to execute, eg. echo "${word}" 
+		done
+
+		Loop will work on every value in variable $words.
+		If variable $words will be in "" it will be treated as one object. (for word in "$words"; do # code to execute; done) <-- loop will work only 1 time
+
+		Other examples: 
+			- for i in 1 2 3 4 5; do echo $1; done
+			- for i in {1..5}; do echo $1; done
+			- for i in {1..10..2}; do echo $1; done --> will print value from 1 to 9 every 2 --> 1, 3, 5, 7, 9
+			- for i in $(seq 1 2 10); do echo $1; done --> same as above, older bash versions
+			- for (( i=1; i<=20; i++ )); do echo $1; done
+
+	Break and continue statement:
+		
+		# break -> breaks (leaves) loop
+		for (( i=0; i<=10; i++ ))
+		 do
+			if [ $i -gt 5 ]
+			then
+			break
+			fi
+			echo $i
+		 done
+
+
+		# continue -> ignoresloop iteration and start another
+		for (( i=0; i<=10; i++ ))
+		 do
+			if [ $i -eq 3 ] || [  $i -eq 7 ]
+			then
+				continue
+			fi
+			echo $i
+		 done
+
+	2. While loop:
+
+		count=1
+		while [ $count -le 20]; do
+			echo $count
+			((count++))
+		done
+
+		Loop will print values up to 20, and the breaks. If condition is FALSE loop breaks.
+		Unlimited loop: while true; do #code; done;
+
+		Other examples:
+			- while :; do echo #code'; done --> unlimited loop
+
+
+	3. Until loop:
+
+		count=1
+		until [ $count -gt 20]; do
+			echo $count
+			((count++))
+		done
+
+		Loop will print values up to 20, and the breaks. If condition is TRUE loop breaks.
+		Unlimited loop: while false; do #code; done;
+
+
+	4. Select loop
+
+		options="Version Users Groups Exit"
+		PS3="Choose option: "
+		select option in $options; do
+			if [ $option == 'Exit' ]; then
+				echo 'Bye!'
+				break
+			fi
+			echo "You choose option: ${option}."
+		done
+
+		Loop work like menu. Will print all values in variable $options, and then waits for user input.
+		If you choose 4) Exit loop will break, otherwise in will print what you chosen.
+
+6. Script Input
+7. Script Output
+8. Sending output from one script to another
+9. Strings Processing
+10. Numbers and Arithmetic
+11. Declare Command
+12. Arrays
+13. Functions
+14. Files and Directories
+15. Sending Email via Script
+16. Curl
+17. Professional Menus
+18. Wait for a File system using inotify
+19. Introduction to grep
+20. Introduction to awk
+21. Introduction to sed
+22. Debugging Bash Scripts
