@@ -1,0 +1,61 @@
+---
+POSIX vs Bash extension:
+	[ is POSIX
+	[[ is a Bash extension inspired from Korn shell
+	
+regular command vs magic
+	[ is just a regular command with a weird name.
+	] is just the last argument of [.
+
+Ubuntu 16.04 actually has an executable for it at /usr/bin/[ provided by coreutils, but the bash built-in version takes precedence.
+Nothing is altered in the way that Bash parses the command.
+In particular, < is redirection, && and || concatenate multiple commands, ( ) generates subshells unless escaped by \, and word expansion happens as usual.
+	[[ X ]] is a single construct that makes X be parsed magically. <, &&, || and () are treated specially, and word splitting rules are different.
+	There are also further differences like = and =~.
+
+In Bashese: [ is a built-in command, and [[ is a keyword: https://askubuntu.com/questions/445749/whats-the-difference-between-shell-builtin-and-shell-keyword
+
+<
+	[[ a < b ]]: lexicographical comparison
+	[ a \< b ]: Same as above. \ required or else does redirection like for any other command. Bash extension.
+	expr x"$x" \< x"$y" > /dev/null or [ "$(expr x"$x" \< x"$y")" = 1 ]: POSIX equivalents, see: How to test strings for lexicographic less than or equal in Bash?
+	
+&& and ||
+	[[ a = a && b = b ]]: true, logical and
+	[ a = a && b = b ]: syntax error, && parsed as an AND command separator cmd1 && cmd2
+	[ a = a ] && [ b = b ]: POSIX reliable equivalent
+	[ a = a -a b = b ]: almost equivalent, but deprecated by POSIX because it is insane and fails for some values of a or b like ! or ( which would be interpreted as logical operations
+	
+(
+	[[ (a = a || a = b) && a = b ]]: false. Without ( ), would be true because [[ && ]] has greater precedence than [[ || ]]
+	[ ( a = a ) ]: syntax error, () is interpreted as a subshell
+	[ \( a = a -o a = b \) -a a = b ]: equivalent, but (), -a, and -o are deprecated by POSIX. Without \( \) would be true because -a has greater precedence than -o
+	{ [ a = a ] || [ a = b ]; } && [ a = b ] non-deprecated POSIX equivalent. In this particular case however, we could have written just: [ a = a ] || [ a = b ] && [ a = b ] because the || and && shell operators have equal precedence unlike [[ || ]] and [[ && ]] and -o, -a and [
+	
+word splitting and filename generation upon expansions (split+glob)
+	x='a b'; [[ $x = 'a b' ]]: true, quotes not needed
+	x='a b'; [ $x = 'a b' ]: syntax error, expands to [ a b = 'a b' ]
+	x='*'; [ $x = 'a b' ]: syntax error if there's more than one file in the current directory.
+	x='a b'; [ "$x" = 'a b' ]: POSIX equivalent
+	
+=
+	[[ ab = a? ]]: true, because it does pattern matching (* ? [ are magic). Does not glob expand to files in current directory.
+	[ ab = a? ]: a? glob expands. So may be true or false depending on the files in the current directory.
+	[ ab = a\? ]: false, not glob expansion
+	= and == are the same in both [ and [[, but == is a Bash extension.
+	case ab in (a?) echo match; esac: POSIX equivalent
+	[[ ab =~ 'ab?' ]]: false, loses magic with '' in Bash 3.2 and above and provided compatibility to bash 3.1 is not enabled (like with BASH_COMPAT=3.1)
+	[[ ab? =~ 'ab?' ]]: true
+	
+=~
+	[[ ab =~ ab? ]]: true, POSIX extended regular expression match, ? does not glob expand
+	[ a =~ a ]: syntax error. No bash equivalent.
+	printf 'ab\n' | grep -Eq 'ab?': POSIX equivalent (single line data only)
+	awk 'BEGIN{exit !(ARGV[1] ~ ARGV[2])}' ab 'ab?': POSIX equivalent.
+	
+	
+Recommendation: always use []
+There are POSIX equivalents for every [[ ]] construct I've seen.
+If you use [[ ]] you:
+	lose portability
+	force the reader to learn the intricacies of another bash extension. [ is just a regular command with a weird name, no special semantics are involved.
