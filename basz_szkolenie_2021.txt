@@ -1,3 +1,6 @@
+# https://linuxhint.com/3hr_bash_tutorial/#1
+# https://linuxize.com/post/bash-heredoc/
+
 1. Hello Bash Scripting
 
 	- *rozszerzenia plików nie mają znaczenia
